@@ -34,6 +34,8 @@ pandora::Algorithm *CreateAlgorithm() const;
 private:    
 pandora::StatusCode Run();    
 pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+int InteractionType(const pandora::MCParticleList *const pMCParticleList, const pandora::CaloHitList *const pCaloHitList, const pandora::PfoList *const pPfoList);
+pandora::StatusCode HitsToStringStream(const pandora::CaloHitVector caloHitVector, int &protonHits, std::ostringstream &tempStr);
 // Member variables here
 //std::string m_pfoListName;
 std::string m_caloHitListNameU;
