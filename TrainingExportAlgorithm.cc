@@ -55,9 +55,7 @@ namespace lar_content
 		std::cout<<caloHitVectorU.size()<<" "<<caloHitVectorV.size()<<" "<<caloHitVectorW.size()<<" "<<std::endl;
 
 		(void) HitsToStringStream(caloHitVectorU, protonHits, tempStr);
-		tempStr << ",";
 		(void) HitsToStringStream(caloHitVectorV, protonHits, tempStr);
-		tempStr << ",";
 		(void) HitsToStringStream(caloHitVectorW, protonHits, tempStr);
 
 		std::ofstream myfile;
@@ -103,6 +101,8 @@ StatusCode TrainingExportAlgorithm::HitsToStringStream(const CaloHitVector caloH
 	protonHits=0;
 	for (const CaloHit *const pCaloHit : caloHitVector)
 	{
+		//int particleId(0);
+		//PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, MCParticleHelper::GetMainMCParticle(pCaloHit)->GetParticleId());
 		//if(MCParticleHelper::GetMainMCParticle(pCaloHit)->GetParticleId() == 2212) // TO DO: Implement this again
 			//protonHits++;
 		tempStr << "," << pCaloHit->GetPositionVector().GetX() << "," << pCaloHit->GetPositionVector().GetZ();
