@@ -51,7 +51,7 @@ namespace lar_content
 
 		//std::sort(caloHitVectorU.begin(), caloHitVectorU.end(), LArClusterHelper::SortHitsByPosition);
 		int protonHits(0);
-		std::ostringstream tempStr; // Temporary storage for the data in case not enough proton hits are found and the event is dismissed 
+		std::ostringstream tempStr;
 		std::cout<<caloHitVectorU.size()<<" "<<caloHitVectorV.size()<<" "<<caloHitVectorW.size()<<" "<<std::endl;
 
 		(void) HitsToStringStream(caloHitVectorU, protonHits, tempStr);
