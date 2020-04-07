@@ -8,9 +8,6 @@
 #include "larpandoracontent/MyArea/ClassificationAlgorithm.h"
 #include "PandoraMonitoringApi.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-//#include <image_ops.h>
-//#include "/tensorflow/core/lib/core/status.h"
-#include "tensorflow/c/c_api.h"
 
 using namespace pandora;
 namespace lar_content

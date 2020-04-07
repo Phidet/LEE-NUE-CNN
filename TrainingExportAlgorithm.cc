@@ -11,7 +11,7 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
-
+#include "Objects/MCParticle.h"
 #include <fstream>
 
 using namespace pandora;
@@ -19,6 +19,7 @@ namespace lar_content
 {
 	StatusCode TrainingExportAlgorithm::Run()
 	{
+		
 		const MCParticleList *pMCParticleList(nullptr);
 		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
 		const CaloHitList *pCaloHitList(nullptr);
@@ -30,7 +31,7 @@ namespace lar_content
 
 		if(interactionTypeInt!=6 && interactionTypeInt!=7) 
 			return STATUS_CODE_SUCCESS;
-
+		
 		const CaloHitList *pCaloHitListU(nullptr);
 		const CaloHitList *pCaloHitListV(nullptr);
 		const CaloHitList *pCaloHitListW(nullptr);
@@ -48,8 +49,7 @@ namespace lar_content
 
 		if(entriesU >500 || entriesV >500 || entriesW >500)
 			return STATUS_CODE_SUCCESS;
-
-		//std::sort(caloHitVectorU.begin(), caloHitVectorU.end(), LArClusterHelper::SortHitsByPosition);
+			
 		int protonHits(0);
 		std::ostringstream tempStr;
 		std::cout<<caloHitVectorU.size()<<" "<<caloHitVectorV.size()<<" "<<caloHitVectorW.size()<<" "<<std::endl;
@@ -69,7 +69,7 @@ namespace lar_content
 
 	int TrainingExportAlgorithm::InteractionType(const MCParticleList *const pMCParticleList,const CaloHitList *const pCaloHitList, const PfoList *const pPfoList)
 	{
-	// Taken from in parts from EventValidationAlgorithm.cc
+	// Taken in parts from EventValidationAlgorithm.cc
 	// This generates the interaction type (6 for CCQE E, 7 for CCQE E+P) from the reconstructable (!) particles
 	ValidationInfo validationInfo; //From EventValidationBaseAlgorithm
 	FillValidationInfo(pMCParticleList, pCaloHitList, pPfoList, validationInfo); //From EventValidationAlgorithm
@@ -105,7 +105,31 @@ StatusCode TrainingExportAlgorithm::HitsToStringStream(const CaloHitVector caloH
 		//PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, MCParticleHelper::GetMainMCParticle(pCaloHit)->GetParticleId());
 		//if(MCParticleHelper::GetMainMCParticle(pCaloHit)->GetParticleId() == 2212) // TO DO: Implement this again
 			//protonHits++;
-		tempStr << "," << pCaloHit->GetPositionVector().GetX() << "," << pCaloHit->GetPositionVector().GetZ();
+
+		const MCParticleWeightMap  &mcParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
+		float protonHit(0.);
+		float emHit(0.);
+		float otherHit(0.);
+		std::cout<< "_____________________" << std::endl;
+    	for (const MCParticleWeightMap::value_type &mapEntry : mcParticleWeightMap)
+    	{
+    		const int particleID = mapEntry.first->GetParticleId();
+    		switch(particleID){
+			case 22:
+			case 11:
+			case -11:
+				emHit += mapEntry.second;
+				break;
+			case 2212:
+				protonHit += mapEntry.second;
+				break;
+			default:
+				otherHit += mapEntry.second;  			
+    		}
+    		std::cout << "%: " << mapEntry.second << " Id: " << mapEntry.first->GetParticleId() << " em: " << emHit << " prtn: " << protonHit << " othr: " << otherHit << std::endl;
+    	}
+
+		tempStr << "," << pCaloHit->GetPositionVector().GetX() << "," << pCaloHit->GetPositionVector().GetZ() << "," << pCaloHit->GetHadronicEnergy() << "," << emHit << "," << protonHit << "," << otherHit;
 	}
 	for(int i=0; i<2*(500-caloHitVector.size()); i++) // Pads with zeros
 		tempStr << ",0.0";
