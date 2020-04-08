@@ -1,5 +1,5 @@
 /** 
-*  @file   larpandoracontent/LArWorkshop/TrainingExportAlgorithm.h 
+*  @file   larpandoracontent/LArWorkshop/ClassificationAlgorithm.h 
 * 
 *  @brief  Header file for the TrainingExport algorithm class. 
 * 
@@ -17,9 +17,9 @@
 namespace lar_content
 {
 /** 
-*  @brief  TrainingExportAlgorithm class 
+*  @brief  ClassificationAlgorithm class 
 */
-class TrainingExportAlgorithm : public EventValidationAlgorithm
+class ClassificationAlgorithm : public EventValidationAlgorithm
 {
 
 public:
@@ -41,9 +41,9 @@ std::string m_caloHitListNameV;
 std::string m_caloHitListNameW;
 };
 //------------------------------------------------------------------------------------------------------------------------------------------
-inline pandora::Algorithm *TrainingExportAlgorithm::Factory::CreateAlgorithm() const
+inline pandora::Algorithm *ClassificationAlgorithm::Factory::CreateAlgorithm() const
 {
-return new TrainingExportAlgorithm();
+return new ClassificationAlgorithm();
 }
 } // namespace lar_content
 #endif // #ifndef LAR_TrainingExport_ALGORITHM_H
