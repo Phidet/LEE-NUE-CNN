@@ -1,14 +1,13 @@
 /** 
 *  @file   larpandoracontent/LArWorkshop/ClassificationAlgorithm.h 
 * 
-*  @brief  Header file for the TrainingExport algorithm class. 
+*  @brief  Header file for the Classification algorithm class. 
 * 
 *  $Log: $ 
 */
-#ifndef LAR_TrainingExport_ALGORITHM_H
-#define LAR_TrainingExport_ALGORITHM_H 1
+#ifndef LAR_CLASSIFICATION_ALGORITHM_H
+#define LAR_CLASSIFICATION_ALGORITHM_H 1
 #include "Pandora/Algorithm.h"
-#include "larpandoracontent/LArMonitoring/EventValidationAlgorithm.h"
 
 //#ifdef MONITORING
 //#include "PandoraMonitoringApi.h"
@@ -19,7 +18,7 @@ namespace lar_content
 /** 
 *  @brief  ClassificationAlgorithm class 
 */
-class ClassificationAlgorithm : public EventValidationAlgorithm
+class ClassificationAlgorithm : public pandora::Algorithm
 {
 
 public:
@@ -34,8 +33,8 @@ pandora::Algorithm *CreateAlgorithm() const;
 private:    
 pandora::StatusCode Run();    
 pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+pandora::StatusCode HitsToStringStream(const pandora::CaloHitVector caloHitVector, std::ostringstream &tempStr);
 // Member variables here
-//std::string m_pfoListName;
 std::string m_caloHitListNameU;
 std::string m_caloHitListNameV;
 std::string m_caloHitListNameW;
@@ -46,4 +45,4 @@ inline pandora::Algorithm *ClassificationAlgorithm::Factory::CreateAlgorithm() c
 return new ClassificationAlgorithm();
 }
 } // namespace lar_content
-#endif // #ifndef LAR_TrainingExport_ALGORITHM_H
+#endif // #ifndef LAR_CLASSIFICATION_ALGORITHM_H
