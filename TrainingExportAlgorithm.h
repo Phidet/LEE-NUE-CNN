@@ -14,8 +14,6 @@
 //#include "PandoraMonitoringApi.h"
 //#endif
 
-#define IMSIZE 256 // Size of the generated image arrays 
-
 namespace lar_content
 {
 /** 
@@ -37,8 +35,7 @@ private:
 pandora::StatusCode Run();    
 pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 int InteractionType(const pandora::MCParticleList *const pMCParticleList, const pandora::CaloHitList *const pCaloHitList, const pandora::PfoList *const pPfoList);
-pandora::StatusCode PopulateImage(const pandora::CaloHitVector &caloHitVector, std::array<std::array<float,IMSIZE>,IMSIZE> &view, float (&label)[256][256][3]);
-pandora::StatusCode MinBoundaries(const pandora::CaloHitVector &caloHitVector, float &minX, float &minZ);
+pandora::StatusCode HitsToStringStream(const pandora::CaloHitVector caloHitVector, int &protonHits, std::ostringstream &tempStr);
 // Member variables here
 //std::string m_pfoListName;
 std::string m_caloHitListNameU;
