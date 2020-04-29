@@ -15,8 +15,7 @@
 #include <fstream>
 #include <array>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
+//#include "larpandora/LArPandoraInterface/LArPandoraGeometry.h"
 
 using namespace pandora;
 
@@ -35,68 +34,70 @@ namespace lar_content
 		CaloHitVector caloHitVectorV(pCaloHitListV->begin(), pCaloHitListV->end());
 		CaloHitVector caloHitVectorW(pCaloHitListW->begin(), pCaloHitListW->end());
 
-		std::sort(caloHitVectorU.begin(), caloHitVectorU.end(), LArClusterHelper::SortHitsByPosition);
-
-		std::array<std::array<float,IMSIZE>,IMSIZE> viewU = {0};
-		//float viewU[IMSIZE][IMSIZE] = {0};
-		float labelU[IMSIZE][IMSIZE][3] = {0};
-
-		PopulateImage(caloHitVectorU, viewU, labelU);
-		//cv::Mat M(512, 512, CV_32FC1, black);
-		//cv::imwrite("~/imgOut.bmp",  M);
-		std::ofstream file("TrainingTestingOutput/viewU.bin", std::ios::out | std::ios::binary);  // https://stackoverflow.com/questions/48193667/save-array-to-binary-file-not-working-c
-		if(!file) {
-    		// error handling
-			std::cout << "ERROR" <<std::endl;
-		}
-		//file.write(viewU[0][0], IMSIZE * IMSIZE * sizeof(decltype(viewU)::value_type));
+		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateImage(caloHitVectorU));
 
 		return STATUS_CODE_SUCCESS;
 	}
 
-StatusCode TrainingExportAlgorithm::MinBoundaries(const CaloHitVector &caloHitVector, float &minX, float &minZ)
+
+StatusCode TrainingExportAlgorithm::PopulateImage(const CaloHitVector &caloHitVector)
 {
-	/*for (const CaloHit *const pCaloHit : caloHitVector)
+
+	 // // Get global TPC geometry information
+  //   const LArTPCMap &larTPCMap(this->GetPandora().GetGeometry()->GetLArTPCMap());
+  //   const LArTPC *const pFirstLArTPC(larTPCMap.begin()->second);
+
+  //   const float minX(pFirstLArTPC->GetCenterX() - 0.5f * pFirstLArTPC->GetWidthX());
+  //   const float widthX(pFirstLArTPC->GetWidthX());
+  //   //const float minY(pFirstLArTPC->GetCenterY() - 0.5f * pFirstLArTPC->GetWidthY());
+  //   //const float widthY(pFirstLArTPC->GetWidthY());
+  //   const float minZ(pFirstLArTPC->GetCenterZ() - 0.5f * pFirstLArTPC->GetWidthZ());
+  //   const float widthZ(pFirstLArTPC->GetWidthZ());
+
+	std::ofstream file("OutTest/viewU.bin", std::ios::out | std::ios::binary | std::ios::app); 
+	if(!file)
 	{
-		pCaloHit
-	}*/
-	minX = caloHitVector.front()->GetPositionVector().GetX();
-	minZ = caloHitVector.front()->GetPositionVector().GetZ();
-	return STATUS_CODE_SUCCESS;
-}
+		std::cout<<"Problem opening/creating binary file in TrainingExportAlgorithm::PopulateImage."<<std::endl;
+		return STATUS_CODE_FAILURE;
+	}
 
+	const float hitNumber = 1.22f;//caloHitVector.size();
+	file.write((char*)&hitNumber, sizeof(hitNumber));
 
-StatusCode TrainingExportAlgorithm::PopulateImage(const CaloHitVector &caloHitVector, std::array<std::array<float,IMSIZE>,IMSIZE> &view, float (&label)[IMSIZE][IMSIZE][3])
-{
-	float minX, minZ;
-	(void) MinBoundaries(caloHitVector, minX, minZ);
 	for (const CaloHit *const pCaloHit : caloHitVector)
 	{
-    	const int i = (pCaloHit->GetPositionVector().GetX()-minX)/0.03; // Pixel number in X direction
-    	const int j = (pCaloHit->GetPositionVector().GetZ()-minZ)/0.03; // Pixel number in Y direction
+		std::array<float, 4> pixel = {0};
+
+    	const float x = pCaloHit->GetPositionVector().GetX(); //(pCaloHit->GetPositionVector().GetX()-minX)/widthX; // Pixel number in X direction
+    	const float z = pCaloHit->GetPositionVector().GetZ(); //(pCaloHit->GetPositionVector().GetZ()-minZ)/widthZ; // Pixel number in Z direction
+    	file.write((char*)&x, sizeof(x));
+    	file.write((char*)&z, sizeof(z));
+		
 		const MCParticleWeightMap  &mcParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
 
 		// Populates input image
-    	view[i][j] = pCaloHit->GetHadronicEnergy();
-    	
+    	pixel[0] = pCaloHit->GetHadronicEnergy();
+
     	// Populates prediction image
     	for (const MCParticleWeightMap::value_type &mapEntry : mcParticleWeightMap)
     	{
     		const int particleID = mapEntry.first->GetParticleId();
     		switch(particleID){
 				case 22: case 11: case -11:
-					label[i][j][0] += mapEntry.second;
+					pixel[1] += mapEntry.second;
 					break;
 				case 2212:
-					label[i][j][1] += mapEntry.second;
+					pixel[2] += mapEntry.second;
 					break;
-				default:
-					label[i][j][2] += mapEntry.second;
     		}
     	}
+    	pixel[3] = 1.0f - pixel[1] - pixel[2];
+    	file.write((char*)&pixel, sizeof(pixel));
 	}
+	file.close();
 	return STATUS_CODE_SUCCESS;
 }
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 	StatusCode TrainingExportAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 	{
@@ -106,6 +107,6 @@ StatusCode TrainingExportAlgorithm::PopulateImage(const CaloHitVector &caloHitVe
 		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListNameV", m_caloHitListNameV));
 		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListNameW", m_caloHitListNameW));
 
-		return EventValidationAlgorithm::ReadSettings(xmlHandle);
+		return STATUS_CODE_SUCCESS;
 	}
 } // namespace lar_content

@@ -49,7 +49,7 @@ StatusCode ClassificationAlgorithm::HitsToStringStream(const CaloHitVector caloH
 	{
 		tempStr << pCaloHit->GetPositionVector().GetX() << "," << pCaloHit->GetPositionVector().GetZ() << ",";
 	}
-	for(int i=0; i<2*(500-caloHitVector.size()); i++) // Pads with zeros
+	for(u_int i=0; i<2*(500-caloHitVector.size()); i++) // Pads with zeros
 		tempStr << "0.0,";
 	return STATUS_CODE_SUCCESS;
 }
