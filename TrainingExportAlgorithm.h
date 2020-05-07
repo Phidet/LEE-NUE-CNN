@@ -14,7 +14,7 @@
 //#include "PandoraMonitoringApi.h"
 //#endif
 
-#define IMSIZE 256 // Size of the generated image arrays 
+#define IMSIZE 384 //256*1.5 Size of the generated image arrays 
 
 namespace lar_content
 {
@@ -37,6 +37,7 @@ private:
 pandora::StatusCode Run();    
 pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 pandora::StatusCode PopulateImage(const pandora::CaloHitVector &caloHitVector, const float minX, const float minZ);
+pandora::StatusCode PopulateRecoImage(const pandora::PfoList &pfoList);
 bool OneShowerMinBoundaries(const pandora::PfoList *const pPfoList, float &minX, float &minZ);
 // Member variables here
 //std::string m_pfoListName;
