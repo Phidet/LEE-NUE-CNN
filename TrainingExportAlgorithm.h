@@ -38,7 +38,7 @@ pandora::StatusCode Run();
 pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 pandora::StatusCode PopulateImage(const pandora::CaloHitVector &caloHitVector, const float minX, const float minZ);
 pandora::StatusCode PopulateRecoImage(const pandora::PfoList &pfoList);
-bool OneShowerMinBoundaries(const pandora::PfoList *const pPfoList, float &minX, float &minZ);
+bool OneShowerMinBoundaries(const pandora::PfoList *const pPfoList, const pandora::CaloHitList *const pCaloHitList, float &minX, float &minZ);
 // Member variables here
 //std::string m_pfoListName;
 std::string m_caloHitListNameU;

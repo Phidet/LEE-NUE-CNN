@@ -42,10 +42,10 @@ namespace lar_content
 
 		const PfoList *pPfoList(nullptr);
 		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pPfoList));
-		
+
 		float minX(0);
 		float minZ(0);
-		OneShowerMinBoundaries(pPfoList, minX, minZ);
+		OneShowerMinBoundaries(pPfoList, pCaloHitListU, minX, minZ);
 		// float minX, minZ;
 		// if(OneShowerMinBoundaries(pPfoList, minX, minZ))
 		// {
@@ -75,19 +75,14 @@ namespace lar_content
 		return STATUS_CODE_SUCCESS;
 	}
 
-	bool TrainingExportAlgorithm::OneShowerMinBoundaries(const PfoList *const pPfoList, float &minX, float &minZ)
+	bool TrainingExportAlgorithm::OneShowerMinBoundaries(const PfoList *const pPfoList, const CaloHitList *const pCaloHitList, float &minX, float &minZ)
 	{
-		PfoList pfoListCrop;
 		//const ParticleFlowObject *pShowerPfo(nullptr);
 		float vertexX(std::numeric_limits<float>::max());
 		float vertexZ(std::numeric_limits<float>::max());
 		for (const ParticleFlowObject *const pPfo : *pPfoList) // Finds and adds shower to pfoListCrop
 		{
-			if(LArPfoHelper::IsNeutrinoFinalState(pPfo))
-			{
-				pfoListCrop.push_back(pPfo);
-
-				if (LArPfoHelper::IsShower(pPfo)) // && LArPfoHelper::IsNeutrinoFinalState(pPfo)
+				if (LArPfoHelper::IsShower(pPfo) && LArPfoHelper::IsNeutrinoFinalState(pPfo)) // && LArPfoHelper::IsNeutrinoFinalState(pPfo)
 				{	    		
 					CartesianVector v =  LArPfoHelper::GetVertex(pPfo)->GetPosition();
 					v = LArGeometryHelper::ProjectPosition(this->GetPandora(), v, TPC_VIEW_U); // Project 3D vertex onto 2D U view
@@ -97,30 +92,59 @@ namespace lar_content
 						vertexZ = v.GetZ();
 					}
 				}
-			}
 		}
 
-		if(vertexZ==std::numeric_limits<float>::max()) // If no shower is found
-		{
-			return false;
-		}
+		if(vertexZ==std::numeric_limits<float>::max()) return false; // If no shower is found
+		minZ = vertexZ-5.0; // takes vertex z position as shower start
 
-		std::cout<<"------------------ Point T1.11"<<std::endl;
-		CaloHitList caloHitListInCrop;
-		std::cout<<"------------------ Point T1.11.1"<<std::endl;
-		LArPfoHelper::GetCaloHits(pfoListCrop, TPC_VIEW_U, caloHitListInCrop);
-		std::cout<<"------------------ Point T1.12"<<std::endl;
-		
+
 		const int seg = 128;
 	    std::array<uint, seg>  hitXDensity= {0}; // Always combining 8 wires
-	    for (const CaloHit *const pCaloHit : caloHitListInCrop)
+
+		for (const ParticleFlowObject *const pPfo : *pPfoList) // Finds and adds shower to pfoListCrop
+		{
+			float weight =1.f;
+			if (LArPfoHelper::IsShower(pPfo)) // && LArPfoHelper::IsNeutrinoFinalState(pPfo)
+			{
+				if(LArPfoHelper::IsNeutrinoFinalState(pPfo)) weight = 2.f;
+				else weight = 0.5f;
+			}
+			else
+			{
+				if(LArPfoHelper::IsNeutrinoFinalState(pPfo)) weight = 3.f;
+				else weight = 0.5f;
+			}
+
+			PfoList pfoListTemp;
+			pfoListTemp.push_back(pPfo);
+			CaloHitList caloHitList;
+			LArPfoHelper::GetCaloHits(pfoListTemp, TPC_VIEW_U, caloHitList);
+	
+	    	for (const CaloHit *const pCaloHit : caloHitList)
+	    	{
+	    		const float x = pCaloHit->GetPositionVector().GetX();
+	    		const float z = pCaloHit->GetPositionVector().GetZ();
+	    		const int pixelX = (int) ((x-vertexX)/0.3 + IMSIZE)/(2*IMSIZE/seg);
+	    		if(pixelX>=0 && pixelX<seg && (z-minZ)/0.3<IMSIZE && (z-minZ)/0.3>=0)
+	    			hitXDensity[pixelX]+=weight;
+	    	}
+
+		}
+
+	    for (const CaloHit *const pCaloHit : *pCaloHitList)
 	    {
-	    	const float x = pCaloHit->GetPositionVector().GetX();
-	    	const float z = pCaloHit->GetPositionVector().GetZ();
-	    	const int pixelX = (int) ((x-vertexX)/0.3 + IMSIZE)/(2*IMSIZE/seg);
-	    	if(pixelX>=0 && pixelX<seg && (z-minZ)/0.3<IMSIZE && (z-minZ)/0.3>=0)
-	    		hitXDensity[pixelX]++;
+	    	if(!PandoraContentApi::IsAvailable(*this, pCaloHit))
+	    	{	
+	    		float weight =1.f;
+	    		const float x = pCaloHit->GetPositionVector().GetX();
+	    		const float z = pCaloHit->GetPositionVector().GetZ();
+	    		const int pixelX = (int) ((x-vertexX)/0.3 + IMSIZE)/(2*IMSIZE/seg);
+	    		if(pixelX>=0 && pixelX<seg && (z-minZ)/0.3<IMSIZE && (z-minZ)>=0)
+	    			hitXDensity[pixelX]+=weight;
+	    	}
 	    }
+
+
 	    std::cout<<"------------------ Point T1.14"<<std::endl;
 	    int left(0);
 	    int right(seg/2);
@@ -142,9 +166,10 @@ namespace lar_content
 	    } while(loopCounter<=(seg/2));
 	    std::cout<<"------------------ Point T1.15"<<std::endl;
 	    minX = ((2.0*left)/seg-1) * IMSIZE * 0.3 + vertexX;
-		minZ = vertexZ-5.0; // takes vertex z position as shower start
 		return true;
 	}
+
+
 
 
 	StatusCode TrainingExportAlgorithm::PopulateImage(const CaloHitVector &caloHitVector, const float minX, const float minZ)
@@ -192,7 +217,8 @@ namespace lar_content
     	for (const MCParticleWeightMap::value_type &mapEntry : mcParticleWeightMap)
     	{
     		const int particleID = mapEntry.first->GetParticleId();
-    		switch(particleID){
+    		switch(particleID)
+    		{
     			case 22: case 11: case -11: case 211: case -211:
     			pixel[1] += mapEntry.second;
     			break;
