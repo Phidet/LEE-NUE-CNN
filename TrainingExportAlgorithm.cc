@@ -95,15 +95,28 @@ namespace lar_content
 		}
 
 		if(vertexZ==std::numeric_limits<float>::max()) return false; // If no shower is found
-		minZ = vertexZ-5.0; // takes vertex z position as shower start
 
 
 		const int seg = 128;
 	    std::array<uint, seg>  hitXDensity= {0}; // Always combining 8 wires
+		
+		fillMinimizationArray(hitXDensity, pPfoList, pCaloHitList, vertexX, vertexZ, true);
+		minX = findMin(hitXDensity, vertexX);
+
+		std::array<uint, seg>  hitZDensity= {0}; // Always combining 8 wires
+		fillMinimizationArray(hitZDensity, pPfoList, pCaloHitList, vertexZ, minX, false);
+		minZ = findMin(hitZDensity, vertexZ);
+
+		return true;
+	}
+
+	void TrainingExportAlgorithm::fillMinimizationArray(std::array<uint, 128> &hitDensity, const PfoList *const pPfoList, const CaloHitList *const pCaloHitList, const float startD1, const float startD2, const bool directionX)
+	{
+		float weight, d1, d2;
+		int seg = hitDensity.size();
 
 		for (const ParticleFlowObject *const pPfo : *pPfoList) // Finds and adds shower to pfoListCrop
 		{
-			float weight =1.f;
 			if (LArPfoHelper::IsShower(pPfo)) // && LArPfoHelper::IsNeutrinoFinalState(pPfo)
 			{
 				if(LArPfoHelper::IsNeutrinoFinalState(pPfo)) weight = 2.f;
@@ -111,7 +124,7 @@ namespace lar_content
 			}
 			else
 			{
-				if(LArPfoHelper::IsNeutrinoFinalState(pPfo)) weight = 3.f;
+				if(LArPfoHelper::IsNeutrinoFinalState(pPfo)) weight = 5.f;
 				else weight = 0.5f;
 			}
 
@@ -122,31 +135,42 @@ namespace lar_content
 	
 	    	for (const CaloHit *const pCaloHit : caloHitList)
 	    	{
-	    		const float x = pCaloHit->GetPositionVector().GetX();
-	    		const float z = pCaloHit->GetPositionVector().GetZ();
-	    		const int pixelX = (int) ((x-vertexX)/0.3 + IMSIZE)/(2*IMSIZE/seg);
-	    		if(pixelX>=0 && pixelX<seg && (z-minZ)/0.3<IMSIZE && (z-minZ)/0.3>=0)
-	    			hitXDensity[pixelX]+=weight;
+				if(directionX){
+	    			d1 = pCaloHit->GetPositionVector().GetX();
+	    			d2 = pCaloHit->GetPositionVector().GetZ();
+				} else {
+					d1 = pCaloHit->GetPositionVector().GetZ();
+	    			d2 = pCaloHit->GetPositionVector().GetX();
+				}
+	    		const int pixel = (int) ((d1-startD1)/0.3 + IMSIZE)/(2*IMSIZE/seg);
+	    		if(pixel>=0 && pixel<seg && (d2-startD2)/0.3<IMSIZE && (d2-startD2)/0.3>=0)
+	    			hitDensity[pixel]+=weight;
 	    	}
-
 		}
 
+		weight = 1.f;
 	    for (const CaloHit *const pCaloHit : *pCaloHitList)
 	    {
 	    	if(!PandoraContentApi::IsAvailable(*this, pCaloHit))
 	    	{	
-	    		float weight =1.f;
-	    		const float x = pCaloHit->GetPositionVector().GetX();
-	    		const float z = pCaloHit->GetPositionVector().GetZ();
-	    		const int pixelX = (int) ((x-vertexX)/0.3 + IMSIZE)/(2*IMSIZE/seg);
-	    		if(pixelX>=0 && pixelX<seg && (z-minZ)/0.3<IMSIZE && (z-minZ)>=0)
-	    			hitXDensity[pixelX]+=weight;
+				if(directionX){
+	    			d1 = pCaloHit->GetPositionVector().GetX();
+	    			d2 = pCaloHit->GetPositionVector().GetZ();
+				} else {
+					d1 = pCaloHit->GetPositionVector().GetZ();
+	    			d2 = pCaloHit->GetPositionVector().GetX();
+				}
+	    		const int pixel = (int) ((d1-startD1)/0.3 + IMSIZE)/(2*IMSIZE/seg);
+	    		if(pixel>=0 && pixel<seg && (d2-startD2)/0.3<IMSIZE && (d2-startD2)>=0)
+	    			hitDensity[pixel]+=weight;
 	    	}
 	    }
+	}
 
-
-	    std::cout<<"------------------ Point T1.14"<<std::endl;
-	    int left(0);
+	float TrainingExportAlgorithm::findMin(const std::array<uint, 128> hitDensity, const float startPoint) const
+	{
+		int seg = hitDensity.size();
+		int left(0);
 	    int right(seg/2);
 	    int loopCounter(1);
 	    int leftTotal, rightTotal;
@@ -155,21 +179,17 @@ namespace lar_content
 	    	rightTotal = 0;
 	    	for(int i=0; i<seg/2; i++)
 	    	{
-	    		leftTotal += hitXDensity[left+i];
-	    		rightTotal += hitXDensity[right+i];
+	    		leftTotal += hitDensity[left+i];
+	    		rightTotal += hitDensity[right+i];
 	    	}
 
 	    	if(leftTotal>rightTotal) right -= (seg/4)/loopCounter;
 	    	else left += (seg/4)/loopCounter;
 	    	loopCounter *=2;
-	    	std::cout<<"^^^^^^^^^^^ ResultLeft: "<<left <<" "<<vertexX<<" "<<seg<<std::endl;
 	    } while(loopCounter<=(seg/2));
-	    std::cout<<"------------------ Point T1.15"<<std::endl;
-	    minX = ((2.0*left)/seg-1) * IMSIZE * 0.3 + vertexX;
-		return true;
+	    const float minValue = ((2.0*left)/seg-1) * IMSIZE * 0.3 + startPoint;
+	    return minValue;
 	}
-
-
 
 
 	StatusCode TrainingExportAlgorithm::PopulateImage(const CaloHitVector &caloHitVector, const float minX, const float minZ)
