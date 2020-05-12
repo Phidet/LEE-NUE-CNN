@@ -14,7 +14,8 @@
 //#include "PandoraMonitoringApi.h"
 //#endif
 
-#define IMSIZE 384 //256*1.5 Size of the generated image arrays 
+#define IMSIZE 384 //256*1.5 Size of the generated image arrays
+#define SEG 128 //256*1.5 Size of the generated image arrays 
 
 namespace lar_content
 {
@@ -37,10 +38,9 @@ private:
 pandora::StatusCode Run();    
 pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 pandora::StatusCode PopulateImage(const pandora::CaloHitVector &caloHitVector, const float minX, const float minZ);
-pandora::StatusCode PopulateRecoImage(const pandora::PfoList &pfoList);
-bool OneShowerMinBoundaries(const pandora::PfoList *const pPfoList, const pandora::CaloHitList *const pCaloHitList, float &minX, float &minZ);
-void fillMinimizationArray(std::array<uint, 128> &hitDensity, const pandora::PfoList *const pPfoList, const pandora::CaloHitList *const pCaloHitList, const float startD1, const float startD2, const bool directionX);
-float findMin(const std::array<uint, 128> hitDensity, const float startPoint) const;
+pandora::StatusCode PopulateRecoImage(const pandora::PfoList &pfoList, const pandora::CartesianVector v);
+void fillMinimizationArray(std::array<float, 128> &hitDensity, const pandora::PfoList *const pPfoList, const pandora::CaloHitList *const pCaloHitList, const pandora::CartesianVector v, const float startD1, const float startD2, const bool directionX);
+float findMin(const std::array<float, 128> hitDensity, const float startPoint) const;
 // Member variables here
 //std::string m_pfoListName;
 std::string m_caloHitListNameU;
