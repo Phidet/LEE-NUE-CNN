@@ -30,15 +30,15 @@ namespace lar_content
 {
 	StatusCode TrainingExportAlgorithm::Run()
 	{	
-		const CaloHitList *pCaloHitListU(nullptr);
-		//const CaloHitList *pCaloHitListV(nullptr);
+		//const CaloHitList *pCaloHitListU(nullptr);
+		const CaloHitList *pCaloHitListV(nullptr);
 		//const CaloHitList *pCaloHitListW(nullptr);
-		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListNameU, pCaloHitListU));
-		//PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListNameV, pCaloHitListV));
+		//PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListNameU, pCaloHitListU));
+		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListNameV, pCaloHitListV));
 		//PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListNameW, pCaloHitListW));
 
-		CaloHitVector caloHitVectorU(pCaloHitListU->begin(), pCaloHitListU->end());
-		//CaloHitVector caloHitVectorV(pCaloHitListV->begin(), pCaloHitListV->end());
+		//CaloHitVector caloHitVectorU(pCaloHitListU->begin(), pCaloHitListU->end());
+		CaloHitVector caloHitVectorV(pCaloHitListV->begin(), pCaloHitListV->end());
 		//CaloHitVector caloHitVectorW(pCaloHitListW->begin(), pCaloHitListW->end());
 
 		const PfoList *pPfoList(nullptr);
@@ -53,14 +53,14 @@ namespace lar_content
 		{
 			if (LArPfoHelper::IsShower(pPfo) && LArPfoHelper::IsNeutrinoFinalState(pPfo)) // && LArPfoHelper::IsNeutrinoFinalState(pPfo)
 			{	
-				PfoList pfoListTemp; // This block skips reconstructed showers with fewer than 10 hits in the U plane
+				PfoList pfoListTemp; // This block skips reconstructed showers with fewer than 15 hits in the V plane
 				pfoListTemp.push_back(pPfo);
 				CaloHitList caloHitList;
-				LArPfoHelper::GetCaloHits(pfoListTemp, TPC_VIEW_U, caloHitList);
+				LArPfoHelper::GetCaloHits(pfoListTemp, TPC_VIEW_V, caloHitList);
 				if(caloHitList.size()<15) continue;
 
 				CartesianVector v =  LArPfoHelper::GetVertex(pPfo)->GetPosition();
-				v = LArGeometryHelper::ProjectPosition(this->GetPandora(), v, TPC_VIEW_U); // Project 3D vertex onto 2D U view
+				v = LArGeometryHelper::ProjectPosition(this->GetPandora(), v, TPC_VIEW_V); // Project 3D vertex onto 2D U view
 				
 				const float xDiff = v.GetX()-vertexX;
 				const float zDiff = v.GetZ()-vertexZ;
@@ -71,18 +71,18 @@ namespace lar_content
 					vertexX = v.GetX();
 					vertexZ = v.GetZ();
 				    std::array<float, SEG>  hitXDensity= {0}; // Always combining 8 wires
-				    fillMinimizationArray(hitXDensity, pPfoList, pCaloHitListU, v, vertexX, vertexZ-IMSIZE/3*0.3, true);
+				    fillMinimizationArray(hitXDensity, pPfoList, pCaloHitListV, v, vertexX, vertexZ-IMSIZE/3*0.3, true);
 				    minX = findMin(hitXDensity, vertexX);
 
 					std::array<float, SEG>  hitZDensity= {0}; // Always combining 8 wires
-					fillMinimizationArray(hitZDensity, pPfoList, pCaloHitListU, v, vertexZ, minX, false);
+					fillMinimizationArray(hitZDensity, pPfoList, pCaloHitListV, v, vertexZ, minX, false);
 					minZ = findMin(hitZDensity, vertexZ);
 
 					// std::array<float, SEG>  hitX2Density= {0}; // Always combining 8 wires
 					// fillMinimizationArray(hitX2Density, pPfoList, pCaloHitListU, v, vertexX, minZ, true);
 					// minX = findMin(hitX2Density, vertexX);
 
-					PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateImage(caloHitVectorU, minX, minZ));
+					PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateImage(caloHitVectorV, minX, minZ));
 					PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateRecoImage(*pPfoList, v));
 				}
 			}
@@ -110,7 +110,7 @@ namespace lar_content
 			try
 			{
 				CartesianVector v2 =  LArPfoHelper::GetVertex(pPfo)->GetPosition();
-				v2 = LArGeometryHelper::ProjectPosition(this->GetPandora(), v2, TPC_VIEW_U); // Project 3D vertex onto 2D U view
+				v2 = LArGeometryHelper::ProjectPosition(this->GetPandora(), v2, TPC_VIEW_V); // Project 3D vertex onto 2D U view
 				const float xDiff = v.GetX()-v2.GetX();
 				const float zDiff = v.GetZ()-v2.GetZ();
 				const float squaredDist = xDiff*xDiff+zDiff*zDiff;
@@ -126,7 +126,7 @@ namespace lar_content
 			PfoList pfoListTemp;
 			pfoListTemp.push_back(pPfo);
 			CaloHitList caloHitList;
-			LArPfoHelper::GetCaloHits(pfoListTemp, TPC_VIEW_U, caloHitList);
+			LArPfoHelper::GetCaloHits(pfoListTemp, TPC_VIEW_V, caloHitList);
 			for (const CaloHit *const pCaloHit : caloHitList)
 			{
 				if(directionX){
@@ -214,7 +214,7 @@ namespace lar_content
 
 	StatusCode TrainingExportAlgorithm::PopulateImage(const CaloHitVector &caloHitVector, const float minX, const float minZ)
 	{
-		std::ofstream file("OutTest/viewU.bin", std::ios::out | std::ios::binary | std::ios::app); 
+		std::ofstream file("OutTest/viewV.bin", std::ios::out | std::ios::binary | std::ios::app); 
 		if(!file)
 		{
 			std::cout<<"Problem opening/creating binary file in TrainingExportAlgorithm::PopulateImage."<<std::endl;
@@ -228,11 +228,13 @@ namespace lar_content
 
 		for (const CaloHit *const pCaloHit : caloHitVector)
 		{
-			//if((x-minX)/0.3>=IMSIZE || (z-minZ)/0.3>=IMSIZE || (x-minX)/0.3<0 || (z-minZ)/0.3<0) continue; // Skipps hits that are not in the crop area
-
+			const float x = pCaloHit->GetPositionVector().GetX();
+			const float z = pCaloHit->GetPositionVector().GetZ();
+			if((x-minX)/0.3>=IMSIZE || (z-minZ)/0.3>=IMSIZE || (x-minX)<0 || (z-minZ)<0) continue; // Skipps hits that are not in the crop area
+			
 			std::array<float, 6> pixel = {0};
-			pixel[0] = pCaloHit->GetPositionVector().GetX(); 
-			pixel[1] = pCaloHit->GetPositionVector().GetZ(); 
+			pixel[0] = x;
+			pixel[1] = z; 
 			pixel[2] = pCaloHit->GetHadronicEnergy(); // Populates input image
 
 			const MCParticleWeightMap  &mcParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
@@ -260,7 +262,7 @@ namespace lar_content
 
 	StatusCode TrainingExportAlgorithm::PopulateRecoImage(const PfoList &pfoList, const CartesianVector v)
 	{
-		std::ofstream file("OutTest/PandoraRecoU.bin", std::ios::out | std::ios::binary | std::ios::app); 
+		std::ofstream file("OutTest/PandoraRecoV.bin", std::ios::out | std::ios::binary | std::ios::app); 
 		if(!file)
 		{
 			std::cout<<"Problem opening/creating binary file in TrainingExportAlgorithm::PopulateImage."<<std::endl;
@@ -280,7 +282,7 @@ namespace lar_content
 			PfoList pfoListTemp;
 			pfoListTemp.push_back(pPfo);
 			CaloHitList caloHitList;
-			LArPfoHelper::GetCaloHits(pfoListTemp, TPC_VIEW_U, caloHitList);
+			LArPfoHelper::GetCaloHits(pfoListTemp, TPC_VIEW_V, caloHitList);
 			for (const CaloHit *const pCaloHit : caloHitList)
 			{
 				std::array<float, 4> pixel = {0};
