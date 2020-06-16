@@ -12,10 +12,15 @@
 #include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "Objects/MCParticle.h"
 #include <fstream>
 #include <array>
 #include <limits>
+
+
+//#include "Persistency/FileWriter.h" //////////// Use this to write to binary (See BinaryFileWriter.h)
+
 
 #ifdef MONITORING
 #include "PandoraMonitoringApi.h"
@@ -30,125 +35,186 @@ namespace lar_content
 {
 	StatusCode TrainingExportAlgorithm::Run()
 	{	
-		//const CaloHitList *pCaloHitListU(nullptr);
+		const CaloHitList *pCaloHitListU(nullptr);
 		const CaloHitList *pCaloHitListV(nullptr);
-		//const CaloHitList *pCaloHitListW(nullptr);
-		
-		//PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_clusterListNames[0], pCaloHitListU));
-		std::cout<<"TTTTTTTTTTTTTTTTTT--Now "<<m_clusterListNames[1]<<std::endl;
+		const CaloHitList *pCaloHitListW(nullptr);		
+		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_clusterListNames[0], pCaloHitListU));
 		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_clusterListNames[1], pCaloHitListV));
-		//PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_clusterListNames[2], pCaloHitListW));
-
-		//CaloHitVector caloHitVectorU(pCaloHitListU->begin(), pCaloHitListU->end());
+		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_clusterListNames[2], pCaloHitListW));
+		CaloHitVector caloHitVectorU(pCaloHitListU->begin(), pCaloHitListU->end());
 		CaloHitVector caloHitVectorV(pCaloHitListV->begin(), pCaloHitListV->end());
-		//CaloHitVector caloHitVectorW(pCaloHitListW->begin(), pCaloHitListW->end());
+		CaloHitVector caloHitVectorW(pCaloHitListW->begin(), pCaloHitListW->end());
 
+
+		std::cout<<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n TrainingExportAlgorithm::Run() \n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"<<std::endl;
 		const PfoList *pPfoList(nullptr);
 		//PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListNames[0], pPfoList));
 		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pPfoList));
 
-
-		float minX(0);
-		float minZ(0);
-		float vertexX(std::numeric_limits<float>::max());
-		float vertexZ(std::numeric_limits<float>::max());
-
 		bool foundSuitableShower(false);
 
-		for (const ParticleFlowObject *const pPfo : *pPfoList) // Finds and adds shower to pfoListCrop
-		{
-			std::cout<<"? ";
-			if (LArPfoHelper::IsShower(pPfo))// && LArPfoHelper::IsNeutrinoFinalState(pPfo)) // && LArPfoHelper::IsNeutrinoFinalState(pPfo)
-			{	
-				std::cout<<"TrainingExportAlgorithm-------------- Found Shower X2"<<std::endl;
-				PfoList pfoListTemp; // This block skips reconstructed showers with fewer than 15 hits in the V plane
-				pfoListTemp.push_back(pPfo);
-				CaloHitList caloHitListV;//caloHitListU, caloHitListV, caloHitListW;
-				//LArPfoHelper::GetCaloHits(pfoListTemp, TPC_VIEW_U, caloHitListU);
-				LArPfoHelper::GetCaloHits(pfoListTemp, TPC_VIEW_V, caloHitListV);
-				//LArPfoHelper::GetCaloHits(pfoListTemp, TPC_VIEW_W, caloHitListW);
-				//if(caloHitListU.size()<10 && caloHitListV.size()<10 && caloHitListW.size()<10) continue;
-				if(caloHitListV.size()>15)
-				{
-					foundSuitableShower=true;
-					break;
-				}
-			}
-		}
+		// for (const ParticleFlowObject *const pPfo : *pPfoList) // Finds and adds showers to pfoListCrop
+		// {
+		// 	std::cout<<" LArPfoHelper::IsShower(pPfo): "<<LArPfoHelper::IsShower(pPfo)<<"   LArPfoHelper::IsNeutrinoFinalState(pPfo): "<<LArPfoHelper::IsNeutrinoFinalState(pPfo)<<std::endl;
+		// 	if (LArPfoHelper::IsShower(pPfo) && LArPfoHelper::IsNeutrinoFinalState(pPfo)) 
+		// 	{	
+		// 		unsigned int totalHits(0);
+		// 	    ClusterList clusterList;
+		// 	    LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
+		// 	    for (const Cluster *const pCluster : clusterList)
+		// 	    {
+		//         	totalHits += pCluster->GetNCaloHits();
+		// 	    }
+				
+		// 		std::cout<<"totalHits: "<<totalHits<<std::endl;
+		// 		if(totalHits>20)
+		// 		{
+		// 			foundSuitableShower=true;
+		// 			break;
+		// 		}
+		// 	}
+		// }
+
+		const MCParticleList *pMCParticleList(nullptr);
+	    CartesianVector vert = CartesianVector(0,0,0);
+	    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
+	    for (const MCParticle *const pMCParticle : *pMCParticleList)
+	    {
+	        if (LArMCParticleHelper::IsNeutrino(pMCParticle) && LArMCParticleHelper::GetNuanceCode(pMCParticle)==1001)
+	        {
+	        	vert = CartesianVector(pMCParticle->GetEndpoint().GetX(), pMCParticle->GetEndpoint().GetY(), pMCParticle->GetEndpoint().GetZ());
+	        	foundSuitableShower=true;
+	        }
+	    }
+
+
 		
 		if(foundSuitableShower)
 		{
-			std::cout<<"TrainingExportAlgorithm-------------- Point-1"<<std::endl;
-			const VertexList *pVertexList(nullptr);
-			PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
-			
-			if(pVertexList->size()>1 || pVertexList->size()==0)
-			{
-				std::cout<<"!!!!!!!!!!!TrainingExportAlgorithm Vertex Number: "<<pVertexList->size()<<std::endl;
-				return STATUS_CODE_FAILURE
-			}
-			CartesianVector vert =  pVertexList->front()->GetPosition();
-			
-			//CartesianVector vert =  LArPfoHelper::GetVertex(pPfo)->GetPosition();
+			// const VertexList *pVertexList(nullptr);
+			// PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
+			// if(pVertexList->size()>1 || pVertexList->size()==0)
+			// {
+			// 	std::cout<<"!!!!!!!!!!!TrainingExportAlgorithm Vertex Number: "<<pVertexList->size()<<std::endl;
+			// 	return STATUS_CODE_FAILURE;
+			// }
+			//CartesianVector vert =  pVertexList->front()->GetPosition();
 
-
-			// ///////////////////////////////////////////////////////////////////////////////////////
-			// /// U-view
-			// const CartesianVector vertU = LArGeometryHelper::ProjectPosition(this->GetPandora(), vert, TPC_VIEW_U); // Project 3D vertex onto 2D U view
-			
-			// vertexX = vertU.GetX();
-			// vertexZ = vertU.GetZ();
-		 //    std::array<float, SEG>  hitXDensity= {0}; // Always combining 8 wires
-		 //    fillMinimizationArray(hitXDensity, pPfoList, pCaloHitListV, vertU, vertexX, vertexZ-IMSIZE/3*0.3, true, TPC_VIEW_U);
-		 //    minX = findMin(hitXDensity, vertexX);
-
-			// std::array<float, SEG>  hitZDensity= {0}; // Always combining 8 wires
-			// fillMinimizationArray(hitZDensity, pPfoList, pCaloHitListV, vertU, vertexZ, minX, false, TPC_VIEW_U);
-			// minZ = findMin(hitZDensity, vertexZ);
-
-			// PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateImage(caloHitVectorU, minX, minZ));
-			// //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateRecoImage(*pPfoList, vertV, TPC_VIEW_U));
-			
+			float minX(0);
+			float minZ_U(0), minZ_V(0), minZ_W(0);
 
 			///////////////////////////////////////////////////////////////////////////////////////
-			/// V-view
-			std::cout<<"TrainingExportAlgorithm-------------- Point0"<<std::endl;
-			const CartesianVector vertV = LArGeometryHelper::ProjectPosition(this->GetPandora(), vert, TPC_VIEW_V); // Project 3D vertex onto 2D U view
+			/// Find common minX
+			const CartesianVector vertU = LArGeometryHelper::ProjectPosition(this->GetPandora(), vert, TPC_VIEW_U); // Project 3D vertex onto 2D U view
+			const CartesianVector vertV = LArGeometryHelper::ProjectPosition(this->GetPandora(), vert, TPC_VIEW_V); // Project 3D vertex onto 2D V view
+			const CartesianVector vertW = LArGeometryHelper::ProjectPosition(this->GetPandora(), vert, TPC_VIEW_W); // Project 3D vertex onto 2D W view
 			
-			vertexX = vertV.GetX();
-			vertexZ = vertV.GetZ();
-		    std::array<float, SEG>  hitXDensity= {0}; // Always combining 8 wires
-		    fillMinimizationArray(hitXDensity, pPfoList, pCaloHitListV, vertV, vertexX, vertexZ-IMSIZE/3*0.3, true, TPC_VIEW_V);
-		    minX = findMin(hitXDensity, vertexX);
+		    std::array<float, SEG>  hitDensity= {0}; // Always combining 8 wires
+		    //std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 0"<<std::endl;
+		    fillMinimizationArray(hitDensity, pPfoList, pCaloHitListU, vertU, vertU.GetX(), vertU.GetZ()-IMSIZE/3*0.3, true, TPC_VIEW_U); // vertU.GetX() == vertV.GetX() == vertW.GetX()
+		    //std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 1"<<std::endl;
+		    fillMinimizationArray(hitDensity, pPfoList, pCaloHitListV, vertV, vertV.GetX(), vertV.GetZ()-IMSIZE/3*0.3, true, TPC_VIEW_V);
+		    //std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 2"<<std::endl;
+		    fillMinimizationArray(hitDensity, pPfoList, pCaloHitListW, vertW, vertW.GetX(), vertW.GetZ()-IMSIZE/3*0.3, true, TPC_VIEW_W);
+		    //std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 3"<<std::endl;
+		    minX = findMin(hitDensity, vertU.GetX());
+		    //std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 4"<<std::endl;
+			///////////////////////////////////////////////////////////////////////////////////////
+			/// Find minZ in U-view
+			hitDensity= {0}; // Always combining 8 wires
+			fillMinimizationArray(hitDensity, pPfoList, pCaloHitListU, vertU, vertU.GetZ(), minX, false, TPC_VIEW_U);
+			minZ_U = findMin(hitDensity, vertU.GetZ());
+			//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 5"<<std::endl;
+			///////////////////////////////////////////////////////////////////////////////////////
+			/// Find minZ in V-view
+			hitDensity= {0}; // Always combining 8 wires
+			fillMinimizationArray(hitDensity, pPfoList, pCaloHitListV, vertV, vertV.GetZ(), minX, false, TPC_VIEW_V);
+			minZ_V = findMin(hitDensity, vertV.GetZ());
+			//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 6"<<std::endl;
+			///////////////////////////////////////////////////////////////////////////////////////
+			/// Find minZ in W-view
+			hitDensity= {0}; // Always combining 8 wires
+			fillMinimizationArray(hitDensity, pPfoList, pCaloHitListW, vertW, vertW.GetZ(), minX, false, TPC_VIEW_W);
+			minZ_W = findMin(hitDensity, vertW.GetZ());
 
-			std::array<float, SEG>  hitZDensity= {0}; // Always combining 8 wires
-			fillMinimizationArray(hitZDensity, pPfoList, pCaloHitListV, vertV, vertexZ, minX, false, TPC_VIEW_V);
-			minZ = findMin(hitZDensity, vertexZ);
-
-			std::cout<<"TrainingExportAlgorithm-------------- Point1 "<<std::endl;
-			PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateImage(caloHitVectorV, minX, minZ));
-			PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateRecoImage(*pPfoList, vertV, TPC_VIEW_V));
+			//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7"<<std::endl;
 
 
-				// ///////////////////////////////////////////////////////////////////////////////////////
-				// /// W-view
-				// const CartesianVector vertW = LArGeometryHelper::ProjectPosition(this->GetPandora(), vert, TPC_VIEW_W); // Project 3D vertex onto 2D U view
-				
-				// vertexX = vertW.GetX();
-				// vertexZ = vertW.GetZ();
-			 //    std::array<float, SEG>  hitXDensity= {0}; // Always combining 8 wires
-			 //    fillMinimizationArray(hitXDensity, pPfoList, pCaloHitListV, vertW, vertexX, vertexZ-IMSIZE/3*0.3, true, TPC_VIEW_W);
-			 //    minX = findMin(hitXDensity, vertexX);
+			minX = vertU.GetX()-IMSIZE*0.3/2;
+			minZ_U = vertU.GetZ()-IMSIZE*0.3/2;
+			minZ_V = vertV.GetZ()-IMSIZE*0.3/2;
+			minZ_W = vertW.GetZ()-IMSIZE*0.3/2;
 
-				// std::array<float, SEG>  hitZDensity= {0}; // Always combining 8 wires
-				// fillMinimizationArray(hitZDensity, pPfoList, pCaloHitListV, vertW, vertexZ, minX, false, TPC_VIEW_W);
-				// minZ = findMin(hitZDensity, vertexZ);
 
-				// PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateImage(caloHitVectorW, minX, minZ));
-				// //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateRecoImage(*pPfoList, vertV, TPC_VIEW_W));
+			PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, WriteDetectorGaps(minZ_U, minZ_V, minZ_W));
+			//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 8"<<std::endl;
+
+			PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateImage(caloHitVectorU, minX, minZ_U));
+			PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateImage(caloHitVectorV, minX, minZ_V));
+			PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateImage(caloHitVectorW, minX, minZ_W));
+			//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 9"<<std::endl;
+			PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateRecoImage(*pPfoList, pCaloHitListU, vertU, TPC_VIEW_U));
+			PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateRecoImage(*pPfoList, pCaloHitListV, vertV, TPC_VIEW_V));
+			PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateRecoImage(*pPfoList, pCaloHitListW, vertW, TPC_VIEW_W));
 		}
 		return STATUS_CODE_SUCCESS;
 	}
+
+	StatusCode TrainingExportAlgorithm::WriteDetectorGaps(const float minZ_U, const float minZ_V, const float minZ_W)
+	{
+		//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.1"<<std::endl;
+		std::array<float, 3*IMSIZE> gaps_UVW = {0};
+		float minZ(0.f);
+		//const DetectorGapList &detectorGapList(this->GetPandora().GetGeometry()->GetDetectorGapList());
+		//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.2"<<std::endl;
+		for (const DetectorGap *const pDetectorGap : this->GetPandora().GetGeometry()->GetDetectorGapList())
+		{
+			const LineGap *const pLineGap = dynamic_cast<const LineGap*>(pDetectorGap);
+        	if (!pLineGap) throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+		//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.3"<<std::endl;
+			const int gapType = static_cast<int>(pLineGap->GetLineGapType());
+		//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.4"<<std::endl;
+			switch(gapType)
+			{
+			case TPC_WIRE_GAP_VIEW_U: //gapType==0
+				minZ = minZ_U;
+				break;
+			case TPC_WIRE_GAP_VIEW_V: //gapType==1
+				minZ = minZ_V;
+				break;
+			case TPC_WIRE_GAP_VIEW_W: //gapType==2
+				minZ = minZ_W;
+				break;
+			default:
+				std::cout<<"Undeclared linegap type in TrainingExportAlgorithm::WriteDetectorGaps." <<std::endl;
+				return STATUS_CODE_FAILURE;
+			}
+		//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.5"<<std::endl;
+		//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ gapType: "<<gapType<<std::endl;
+			const int gapStart = std::max(0,(int)((pLineGap->GetLineStartZ()-minZ)/0.3f));
+			const int gapEnd = std::min(IMSIZE-1,(int)((pLineGap->GetLineEndZ()-minZ)/0.3f));
+			for(int i=gapStart; i<=gapEnd; i++)
+			{
+				std::cout<<i<<"/"<<3*IMSIZE-1<<", ";
+				gaps_UVW[IMSIZE*gapType+i] = 1.f;
+			}
+		}
+				//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.6"<<std::endl;
+		std::ofstream file("OutTest/viewUVW.bin", std::ios::out | std::ios::binary | std::ios::app); 
+		if(!file)
+		{
+			std::cout<<"Problem opening/creating binary file in TrainingExportAlgorithm::PopulateImage."<<std::endl;
+			return STATUS_CODE_FAILURE;
+		}
+				//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.7"<<std::endl;
+		const float startMarker = std::numeric_limits<float>::max();//caloHitVector.size();
+		file.write((char*)&startMarker, sizeof(startMarker));
+		file.write((char*)&gaps_UVW, sizeof(gaps_UVW));
+		file.close();
+		//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.8"<<std::endl;
+		return STATUS_CODE_SUCCESS;
+	}
+
 
 	void TrainingExportAlgorithm::fillMinimizationArray(std::array<float, SEG> &hitDensity, const PfoList *const pPfoList, const CaloHitList *const pCaloHitList, const CartesianVector v, const float startD1, const float startD2, const bool directionX, const HitType TPC_VIEW)
 	{
@@ -237,51 +303,19 @@ namespace lar_content
 			}
 
 		return ((2.0*best)/SEG-1) * IMSIZE * 0.3 + startPoint;
-
-
-		// int left(0);
-		// int middle(SEG/4);
-		// int right(SEG/2);
-		// int loopCounter(1);
-		// int leftTotal, rightTotal, middleTotal;
-		// do{
-		// 	leftTotal = 0;
-		// 	middleTotal = 0;
-		// 	rightTotal = 0;
-		// 	for(int i=0; i<SEG/2; i++)
-		// 	{
-		// 		leftTotal += hitDensity[left+i];
-		// 		middleTotal += hitDensity[middle+i];
-		// 		rightTotal += hitDensity[right+i];
-		// 	}
-
-		// 	if(middleTotal<leftTotal || middleTotal<rightTotal)
-		// 	{
-		// 		middle = leftTotal>rightTotal ? left:right;
-		// 	}
-		// 	left = middle - (SEG/8)/loopCounter;
-		// 	right = middle + (SEG/8)/loopCounter;
-
-		// 	left = left>0 ? left: 0;
-		// 	right = right<SEG/2 ? right: SEG/2;
-
-		// 	loopCounter *=2;
-		// } while(loopCounter<(SEG/4));
-		// const float minValue = ((2.0*middle)/SEG-1) * IMSIZE * 0.3 + startPoint;
-		// return minValue;
 	}
 
 
 	StatusCode TrainingExportAlgorithm::PopulateImage(const CaloHitVector &caloHitVector, const float minX, const float minZ)
 	{
-		std::ofstream file("OutTest/viewV2.bin", std::ios::out | std::ios::binary | std::ios::app); 
+		std::ofstream file("OutTest/viewUVW.bin", std::ios::out | std::ios::binary | std::ios::app); 
 		if(!file)
 		{
 			std::cout<<"Problem opening/creating binary file in TrainingExportAlgorithm::PopulateImage."<<std::endl;
 			return STATUS_CODE_FAILURE;
 		}
 
-		const float hitNumber = -1.22f;//caloHitVector.size();
+		const float hitNumber = -std::numeric_limits<float>::max();//caloHitVector.size();
 		file.write((char*)&hitNumber, sizeof(hitNumber));
 		file.write((char*)&minX, sizeof(minX));
 		file.write((char*)&minZ, sizeof(minZ));
@@ -292,21 +326,23 @@ namespace lar_content
 			if((x-minX)/0.3>=IMSIZE || (z-minZ)/0.3>=IMSIZE || (x-minX)<0 || (z-minZ)<0) continue; // Skipps hits that are not in the crop area
 			std::array<float, 6> pixel = {0};
 			pixel[0] = x;
-			pixel[1] = z; 
+			pixel[1] = z;
 			pixel[2] = pCaloHit->GetHadronicEnergy(); // Populates input image
 			const MCParticleWeightMap  &mcParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
 			// Populates prediction image
+			//std::cout<<"--------------------- New Hit"<<std::endl;
 			for (const MCParticleWeightMap::value_type &mapEntry : mcParticleWeightMap)
 			{
 				const int particleID = mapEntry.first->GetParticleId();
+				//std::cout<<"--------------------- particleID: "<<particleID<<" mapEntry.second"<<mapEntry.second<<std::endl;
 				switch(particleID)
 				{
 					case 22: case 11: case -11:
-					pixel[3] += mapEntry.second;
-					break;
+						pixel[3] += mapEntry.second;
+						break;
 					case 2212: case 211: case -211:
-					pixel[4] += mapEntry.second;
-					break;
+						pixel[4] += mapEntry.second;
+						break;
 				}
 			}
 			pixel[5] = 1.0f - pixel[3] - pixel[4];
@@ -317,16 +353,16 @@ namespace lar_content
 	}	
 
 
-	StatusCode TrainingExportAlgorithm::PopulateRecoImage(const PfoList &pfoList, const CartesianVector v, const HitType TPC_VIEW)
+	StatusCode TrainingExportAlgorithm::PopulateRecoImage(const PfoList &pfoList, const CaloHitList *pCaloHitList, const CartesianVector v, const HitType TPC_VIEW)
 	{
-		std::ofstream file("OutTest/PandoraRecoV2.bin", std::ios::out | std::ios::binary | std::ios::app); 
+		std::ofstream file("OutTest/PandoraRecoUVW.bin", std::ios::out | std::ios::binary | std::ios::app); 
 		if(!file)
 		{
 			std::cout<<"Problem opening/creating binary file in TrainingExportAlgorithm::PopulateImage."<<std::endl;
 			return STATUS_CODE_FAILURE;
 		}
 
-		const float hitNumber = -1.22f;
+		const float hitNumber = -std::numeric_limits<float>::max();
 		file.write((char*)&hitNumber, sizeof(hitNumber));
 		const float vertexX = v.GetX();
 		const float vertexZ = v.GetZ();
@@ -356,7 +392,7 @@ namespace lar_content
 	    			}
 	    			else
 	    			{
-	    				pixel[1] = 1.0f;	
+	    				pixel[1] = 1.0f;
 	    			}
 	    		}
 	    		else if(LArPfoHelper::IsTrack(pPfo))
@@ -373,6 +409,21 @@ namespace lar_content
 	    		file.write((char*)&pixel, sizeof(pixel));
 	    	}
 	    }
+
+	 //    for (const CaloHit *const pCaloHit : *pCaloHitList)
+		// {
+		// 	if(!PandoraContentApi::IsAvailable(*this, pCaloHit))
+		// 	{	
+		// 		const float x = pCaloHit->GetPositionVector().GetX();
+	 //    		const float z = pCaloHit->GetPositionVector().GetZ();
+	 //    		file.write((char*)&x, sizeof(x));
+	 //    		file.write((char*)&z, sizeof(z));
+		// 		std::array<float, 4> pixel = {0};
+		// 		pixel[3] = 1.0f;
+		// 		file.write((char*)&pixel, sizeof(pixel));
+		// 	}
+		// }
+
 	    file.close();
 	    return STATUS_CODE_SUCCESS;
 	}	

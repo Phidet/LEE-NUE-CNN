@@ -34,11 +34,12 @@ public:
 pandora::Algorithm *CreateAlgorithm() const;    
 };
 
-private:    
-pandora::StatusCode Run();    
+private:
+pandora::StatusCode Run();
 pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 pandora::StatusCode PopulateImage(const pandora::CaloHitVector &caloHitVector, const float minX, const float minZ);
-pandora::StatusCode PopulateRecoImage(const pandora::PfoList &pfoList, const pandora::CartesianVector v, const pandora::HitType TPC_VIEW);
+pandora::StatusCode PopulateRecoImage(const pandora::PfoList &pfoList, const pandora::CaloHitList *pCaloHitList, const pandora::CartesianVector v, const pandora::HitType TPC_VIEW);
+pandora::StatusCode WriteDetectorGaps(const float minZ_U, const float minZ_V, const float minZ_W);
 void fillMinimizationArray(std::array<float, 128> &hitDensity, const pandora::PfoList *const pPfoList, const pandora::CaloHitList *const pCaloHitList, const pandora::CartesianVector v, const float startD1, const float startD2, const bool directionX, const pandora::HitType TPC_VIEW);
 float findMin(const std::array<float, 128> hitDensity, const float startPoint) const;
 // Member variables here
