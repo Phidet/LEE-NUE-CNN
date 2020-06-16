@@ -1,0 +1,47 @@
+import torch
+import torch.nn.functional as F
+#from tqdm import tqdm
+
+def eval_net(net, loader, class_weights, device):
+    """Evaluation"""
+    net.eval()
+    n_val = len(loader)  # the number of batch
+    tot = 0
+
+    totalPixels = 0
+    falsePixels = 0
+    totalTrackPixels = 0
+    falseTrackPixels = 0
+
+    #with tqdm(total=n_val, desc='Validation round', unit='batch', leave=True) as pbar:
+    for batch in loader:
+        imgs, true_masks = batch['image'], batch['mask']
+        imgs = imgs.to(device=device, dtype=torch.float32)
+        true_masks = true_masks.to(device=device, dtype=torch.long)
+
+        with torch.no_grad():
+            masks_pred = net(imgs)
+
+        class_weights = torch.FloatTensor([1/0.425, 1/0.0692, 1/0.504]).cuda()
+        num = (true_masks!=3).sum()
+        class_weights[0] = torch.div(num, (true_masks==0).sum()*1.0)
+        class_weights[1] = torch.div(num, (true_masks==1).sum()*1.0)
+        class_weights[2] = torch.div(num, (true_masks==2).sum()*1.0)
+        # print("------------------------------")
+        # print(class_weights)
+        # print((true_masks==2).sum(), num)
+        #tot += F.cross_entropy(masks_pred, true_masks, class_weights, ignore_index=3)
+        tot += F.nll_loss(masks_pred, true_masks, class_weights, ignore_index=3)
+
+        difference_mask = true_masks - torch.argmax(masks_pred, axis=1)
+        
+        totalPixels += torch.sum(true_masks!=3)
+        falsePixels += torch.sum(torch.logical_and(difference_mask!=0, true_masks!=3))
+        totalTrackPixels += torch.sum(true_masks==1)
+        falseTrackPixels += torch.sum(torch.logical_and(difference_mask!=0, true_masks==1))
+
+        #tot += F.cross_entropy(mask_pred, true_masks, weight=class_weights, ignore_index=3).item()
+    #pbar.update()
+
+    net.train()
+    return tot/n_val, falsePixels/(1.0*totalPixels), falseTrackPixels/(1.0*totalTrackPixels)
