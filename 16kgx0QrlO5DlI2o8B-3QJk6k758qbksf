@@ -84,10 +84,10 @@ class UNet2(nn.Module):
         self.dc_0_4 = DoubleConv2(16, 16)
 
         self.down_1 = Down(16, 32)
-        self.dc_1_2 = DoubleConv2(32, 32)
         self.dc_1_0 = DoubleConv2(32, 32)
-        self.dc_1_3 = DoubleConv2(32, 32)
         self.dc_1_1 = DoubleConv2(32, 32)
+        self.dc_1_2 = DoubleConv2(32, 32)
+        self.dc_1_3 = DoubleConv2(32, 32)
 
         self.down_2 = Down(32, 64)
         self.dc_2_0 = DoubleConv2(64, 64)
@@ -198,3 +198,83 @@ class UNet2(nn.Module):
         y = self.output(y)
         y = self.logSoftmax(y)
         return y
+
+
+class Cerberus(nn.Module):
+    def __init__(self, n_channels, n_classes, depth):
+        super(UNet, self).__init__()
+
+        if (depth - 2) % 6 != 0:
+            raise ValueError('depth should be 6n+2 (eg 20, 32, 44)')
+
+        num_filters = 16
+
+        self.num_res_blocks = int((depth - 2) / 6) 
+        self.input = DoubleConvNoResidual(n_channels, num_filters)
+
+        self.DownLayers = nn.ModuleList()
+        for stack in range(5):
+            for res_block in range(self.num_res_blocks):
+                if (stack > 0 and res_block == 0): # first layer but not first stack
+                    self.DownLayers.append(Down(num_filters, 2*num_filters))
+                    num_filters *= 2
+                else:
+                    self.DownLayers.append(DoubleConv2(num_filters, num_filters))
+
+        self.UpLayers = nn.ModuleList()
+        for stack in range(4):
+            for res_block in range(self.num_res_blocks):
+                if (res_block == 0): # first layer but not first stack
+                    self.UpLayers.append(Up(num_filters, num_filters//2))
+                    num_filters = int(num_filters//2)
+                else:
+                    self.UpLayers.append(DoubleConv3(num_filters, num_filters))
+        self.output = OutConv(num_filters, n_classes)
+        self.logSoftmax = nn.LogSoftmax(dim=1) # Normalises output over the channel dimension
+
+
+    def forward(self, x, y, z):
+        skipsX = []
+        skipsY = []
+        skipsZ = []
+        
+        ####### Beginning of U-ResNet #######
+        #####################################
+        x = self.input(x)
+        y = self.input(y)
+        z = self.input(z)
+                
+        ####### Beginning of Downsampling ResNet
+        for i, layer in enumerate(self.DownLayers):
+            x = layer(x)
+            y = layer(y)
+            z = layer(z)
+            if(i%self.num_res_blocks==0):
+                skipsX.append(x)
+                skipsY.append(y)
+                skipsZ.append(z)
+        ####### End of Downsampling ResNet
+        
+        ####### Beginning of Upsampling ResNet
+        for i, layer in enumerate(self.UpLayers):
+            if i%self.num_res_blocks==0:
+                skipX = skipsX[-2-(i//self.num_res_blocks)]
+                skipY = skipsY[-2-(i//self.num_res_blocks)]
+                skipZ = skipsZ[-2-(i//self.num_res_blocks)]
+                x = layer(x, skipX)
+                y = layer(z, skipY)
+                z = layer(z, skipZ)
+            else:
+                x = layer(x)
+                y = layer(y)
+                z = layer(z)
+        ####### End of Upsampling ResNet
+
+        x = self.output(x)
+        y = self.output(y)
+        z = self.output(z)
+        x = self.logSoftmax(x)
+        y = self.logSoftmax(y)
+        z = self.logSoftmax(z)
+        return x, y, z
+

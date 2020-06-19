@@ -7,61 +7,55 @@ class PandoraImage(Dataset):
     def __init__(self, path, imsize=384):
         self.imsize = imsize        
         self.data = np.fromfile(path, dtype=np.float32)
-        self.ss = np.where(self.data==-1.22)[0] # Image seperator locations
+        self.fs = np.where(self.data==np.finfo(np.float32).max)[0] # Image seperator locations
         
 
     def __len__(self):
-        return len(self.ss)
+        return len(self.fs)
 
-#     @classmethod
-#     def preprocess(cls, pil_img):
-#         img_nd = np.array(pil_img)
-
-#         if len(img_nd.shape) == 2:
-#             img_nd = np.expand_dims(img_nd, axis=2)
-
-#         # HWC to CHW
-#         img_trans = img_nd.transpose((2, 0, 1))
-#         return img_trans
 
     def __getitem__(self, i):
-        xMin = self.data[1+self.ss[i]]
-        zMin = self.data[2+self.ss[i]]
-        if i+1<self.ss.size:
-            nextSep = self.ss[i+1]
-        else:
-            nextSep = None;
-            print("nextSep = self.data.size-1;")
-            print(self.ss[i])
-            print(nextSep)
-        points = self.data[3+self.ss[i]:nextSep].reshape((-1,6))
-        x = ((points[:,0]-xMin)/0.3).astype(int)
-        z = ((points[:,1]-zMin)/0.3).astype(int)
-        Esto = points[:,2:]
+        
+        if i+1<np.size(self.fs): nextSep = self.fs[i+1]# - self.fs[i]
+        else: nextSep = None#np.size(self.data)-self.fs[i+1]-1;
+        
+        ss = np.where(self.data[self.fs[i]:nextSep]==-np.finfo(np.float32).max)[0] + self.fs[i]
+        ss = np.append(ss, nextSep)
 
-        frame = np.zeros((1, 4, self.imsize, self.imsize))
-        for x1, z1, Esto1 in zip(x, z, Esto):
-            frame[:,:,x1,z1]=Esto1
+        frame = np.zeros((6, self.imsize, self.imsize)) # one gaps and one hits channel for every view => 6
+        mask = np.zeros((3, self.imsize, self.imsize)).astype(int) # three truth channels fro each view => 9
+        
+        for j in range(3): 
+            gaps = self.data[self.fs[i]+j*self.imsize+1:self.fs[i]+(j+1)*self.imsize+1] 
+            gaps = np.repeat(gaps, self.imsize, axis=0).reshape((self.imsize, self.imsize))
 
-#         img = frame[:,0,:,:]
-#         img = img[:,None,:,:] # Adds an axis of size 1
-#         mask = frame[:,1:,:,:]
+            #print("YYY0",i, j, np.shape(ss), np.shape(self.fs))
+            xMin = self.data[1+ss[j]]
+            zMin = self.data[2+ss[j]]
+            points = self.data[3+ss[j]:ss[j+1]].reshape((-1,6))
 
-        img = frame[:,0,:,:]
-        img /= 0.015 # Normalisation
-        img[img>1.0]=1.0
-        mask = frame[0,1:,:,:]
+            x = ((points[:,0]-xMin)/0.3).astype(int)
+            z = ((points[:,1]-zMin)/0.3).astype(int)
+            Esto = points[:,2:]
 
-        #print("PandoraImage img",np.shape(img))
-        #print("PandoraImage mask",np.shape(mask))
-        maskSum = np.sum(mask, axis=0)
-        #print("PandoraImage maskSum",np.shape(maskSum))
-        mask3 = np.argmax(mask, axis=0)
-        #print("PandoraImage mask3",np.shape(mask3))
+            maskTemp = np.zeros((3, self.imsize, self.imsize))
+            frame[2*j,:,:] = gaps
+            for x1, z1, Esto1 in zip(x, z, Esto):
+                frame[2*j+1,x1,z1]=Esto1[0]
+                maskTemp[:,x1,z1]=Esto1[1:]
+            
+            maskSum = np.sum(maskTemp, axis=0)
+            maskBkgd = np.where(maskSum==0.0)
+            #print("maskSum",np.shape(maskSum))
+            mask[j,:,:] = np.argmax(maskTemp, axis=0)
+            #print("mask[j,:,:]",np.shape(mask[j,:,:]))
+            mask[j,:,:][maskBkgd]=3
 
-        maskBkgd = np.where(maskSum==0.0)
-        mask3[maskBkgd]=3
-#         img = self.preprocess(img)
-#         mask = self.preprocess(mask)
+        #mask[np.where(mask==2)]=0 # Gives Overlay and showers the same truth value
+        frame /= 0.015 # Normalisation
+        frame[frame>1.0]=1.0
 
-        return {'image': torch.from_numpy(img), 'mask': torch.from_numpy(mask3)}
+
+        return {'image_u': torch.from_numpy(frame[:2,:,:]), 'mask_u': torch.from_numpy(mask[0,:,:]), 
+                'image_v': torch.from_numpy(frame[2:4,:,:]), 'mask_v': torch.from_numpy(mask[1,:,:]),
+                'image_w': torch.from_numpy(frame[4:6,:,:]), 'mask_w': torch.from_numpy(mask[2,:,:])}

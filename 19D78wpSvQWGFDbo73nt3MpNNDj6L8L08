@@ -1,0 +1,511 @@
+"""Based on https://github.com/LArbys/ub_UResNet/blob/master/build_net.py and the examples in the torchvision library"""
+""" Full assembly of the parts to form the complete network """
+import torch.nn.functional as F
+from unet_parts import *
+
+
+class UNetX(nn.Module):
+    def __init__(self, n_channels, n_classes, depth=2):
+        super(UNetX, self).__init__()
+
+        self.r0 = ResidualX(BasicBlock, n_channels, 64, depth)
+        self.d0 = DownX()
+
+        self.r1 = ResidualX(BasicBlock, 64, 128, depth)
+        self.d1 = DownX()
+
+        self.r2 = ResidualX(BasicBlock, 128, 256, depth)
+        self.d2 = DownX()
+
+        self.r3 = ResidualX(BasicBlock, 256, 512, depth)
+        self.d3 = DownX()
+
+        self.r4 = ResidualX(BasicBlock, 512, 1024, depth)
+
+        self.u0 = UpX(1024, 1024)
+        self.r5 = ResidualX(BasicBlock, 1024, 512, depth)
+
+        self.u1 = UpX(512, 512)
+        self.r6 = ResidualX(BasicBlock, 512, 256, depth)
+
+        self.u2 = UpX(256, 256)
+        self.r7 = ResidualX(BasicBlock, 256, 128, depth)
+
+        self.u3 = UpX(128, 128)
+        self.r8 = ResidualX(BasicBlock, 128, 64, depth)
+     
+
+        self.output = OutConv(64, n_classes)
+        self.logSoftmax = nn.LogSoftmax(dim=1) # Normalises output over the channel dimension
+
+
+    def forward(self, x):
+        
+        ####### Beginning of U-ResNet #######
+        #####################################
+        
+        # print("X0 ", x.shape)
+        x0 = self.r0(x)
+        y = self.d0(x0)
+
+        # print("X1 ", y.shape)
+        x1 = self.r1(y)
+        y = self.d1(x1)
+
+        # print("X2 ", y.shape)
+        x2 = self.r2(y)
+        y = self.d2(x2)
+
+        # print("X3 ", y.shape)
+        x3 = self.r3(y)
+        y = self.d3(x3)
+
+        # print("X4 ", y.shape)
+        y = self.r4(y)
+
+
+        # print("X5 ", y.shape)
+        y = self.u0(y, x3)
+        y = self.r5(y)
+
+        # print("X6 ", y.shape)
+        y = self.u1(y, x2)
+        y = self.r6(y)
+
+        # print("X7 ", y.shape)
+        y = self.u2(y, x1)
+        y = self.r7(y)
+
+        # print("X8 ", y.shape)
+        y = self.u3(y, x0)
+        y = self.r8(y)
+
+        # print("X9 ", y.shape)
+        y = self.output(y)
+        y = self.logSoftmax(y)
+        return y
+
+
+### Deeper Version
+class UNetX2(nn.Module):
+    def __init__(self, n_channels, n_classes, depth=2):
+        super(UNetX2, self).__init__()
+
+        self.r0 = ResidualX(BasicBlock, n_channels, 64, depth)
+        self.d0 = DownX()
+
+        self.r1 = ResidualX(BasicBlock, 64, 128, depth)
+        self.d1 = DownX()
+
+        self.r2 = ResidualX(BasicBlock, 128, 256, depth)
+        self.d2 = DownX()
+
+        self.r3 = ResidualX(BasicBlock, 256, 512, depth)
+        self.d3 = DownX()
+
+        self.r4 = ResidualX(BasicBlock, 512, 1024, depth)
+        self.d4 = DownX()
+
+        self.r5 = ResidualX(BasicBlock, 1024, 2048, depth)
+
+        self.u0 = UpX(2048, 2048)
+        self.r6 = ResidualX(BasicBlock, 2048, 1024, depth)
+
+        self.u1 = UpX(1024, 1024)
+        self.r7 = ResidualX(BasicBlock, 1024, 512, depth)
+
+        self.u2 = UpX(512, 512)
+        self.r8 = ResidualX(BasicBlock, 512, 256, depth)
+
+        self.u3 = UpX(256, 256)
+        self.r9 = ResidualX(BasicBlock, 256, 128, depth)
+
+        self.u4 = UpX(128, 128)
+        self.r10 = ResidualX(BasicBlock, 128, 64, depth)
+     
+
+        self.output = OutConv(64, n_classes)
+        self.logSoftmax = nn.LogSoftmax(dim=1) # Normalises output over the channel dimension
+
+
+    def forward(self, x):
+        
+        ####### Beginning of U-ResNet #######
+        #####################################
+        
+        # print("X0 ", x.shape)
+        x0 = self.r0(x)
+        y = self.d0(x0)
+
+        # print("X1 ", y.shape)
+        x1 = self.r1(y)
+        y = self.d1(x1)
+
+        # print("X2 ", y.shape)
+        x2 = self.r2(y)
+        y = self.d2(x2)
+
+        # print("X3 ", y.shape)
+        x3 = self.r3(y)
+        y = self.d3(x3)
+
+        x4 = self.r4(y)
+        y = self.d4(x4)
+
+        # print("X4 ", y.shape)
+        y = self.r5(y)
+
+
+        y = self.u0(y, x4)
+        y = self.r6(y)
+
+        # print("X5 ", y.shape)
+        y = self.u1(y, x3)
+        y = self.r7(y)
+
+        # print("X6 ", y.shape)
+        y = self.u2(y, x2)
+        y = self.r8(y)
+
+        # print("X7 ", y.shape)
+        y = self.u3(y, x1)
+        y = self.r9(y)
+
+        # print("X8 ", y.shape)
+        y = self.u4(y, x0)
+        y = self.r10(y)
+
+        # print("X9 ", y.shape)
+        y = self.output(y)
+        y = self.logSoftmax(y)
+        return y
+
+#########################################################################
+
+### Deeper Version
+class UNetX3(nn.Module):
+    def __init__(self, n_channels, n_classes, depth=2):
+        super(UNetX3, self).__init__()
+
+        self.r0 = ResidualX(BasicBlock, n_channels, 16, depth)
+        self.d0 = DownX()
+
+        self.r1 = ResidualX(BasicBlock, 16, 32, depth)
+        self.d1 = DownX()
+
+        self.r2 = ResidualX(BasicBlock, 32, 64, depth)
+        self.d2 = DownX()
+
+        self.r3 = ResidualX(BasicBlock, 64, 128, depth)
+        self.d3 = DownX()
+
+        self.r4 = ResidualX(BasicBlock, 128, 256, depth)
+        self.d4 = DownX()
+
+        self.r5 = ResidualX(BasicBlock, 256, 512, depth)
+        self.d5 = DownX()
+
+        self.r6 = ResidualX(BasicBlock, 512, 1024, depth)
+
+        self.u0 = UpX(1024, 1024)
+        self.r7 = ResidualX(BasicBlock, 1024, 512, depth)
+
+        self.u1 = UpX(512, 512)
+        self.r8 = ResidualX(BasicBlock, 512, 256, depth)
+
+        self.u2 = UpX(256, 256)
+        self.r9 = ResidualX(BasicBlock, 256, 128, depth)
+
+        self.u3 = UpX(128, 128)
+        self.r10 = ResidualX(BasicBlock, 128, 64, depth)
+
+        self.u4 = UpX(64, 64)
+        self.r11 = ResidualX(BasicBlock, 64, 32, depth)
+
+        self.u5 = UpX(32, 32)
+        self.r12 = ResidualX(BasicBlock, 32, 16, depth)
+     
+
+        self.output = OutConv(16, n_classes)
+        self.logSoftmax = nn.LogSoftmax(dim=1) # Normalises output over the channel dimension
+
+
+    def forward(self, x):
+        
+        ####### Beginning of U-ResNet #######
+        #####################################
+        
+        # print("X0 ", x.shape)
+        x0 = self.r0(x)
+        y = self.d0(x0)
+
+        # print("X1 ", y.shape)
+        x1 = self.r1(y)
+        y = self.d1(x1)
+
+        # print("X2 ", y.shape)
+        x2 = self.r2(y)
+        y = self.d2(x2)
+
+        # print("X3 ", y.shape)
+        x3 = self.r3(y)
+        y = self.d3(x3)
+
+        x4 = self.r4(y)
+        y = self.d4(x4)
+
+        x5 = self.r5(y)
+        y = self.d5(x5)
+
+        # print("X4 ", y.shape)
+        y = self.r6(y)
+
+
+        y = self.u0(y, x5)
+        y = self.r7(y)
+
+        # print("X5 ", y.shape)
+        y = self.u1(y, x4)
+        y = self.r8(y)
+
+        # print("X6 ", y.shape)
+        y = self.u2(y, x3)
+        y = self.r9(y)
+
+        # print("X7 ", y.shape)
+        y = self.u3(y, x2)
+        y = self.r10(y)
+
+        # print("X8 ", y.shape)
+        y = self.u4(y, x1)
+        y = self.r11(y)
+
+        y = self.u5(y, x0)
+        y = self.r12(y)
+
+        # print("X9 ", y.shape)
+        y = self.output(y)
+        y = self.logSoftmax(y)
+        return y
+
+#########################################################################
+
+### Deeper Version
+class UNetX3_Bottleneck(nn.Module):
+    def __init__(self, n_channels, n_classes, depth=2):
+        super(UNetX3_Bottleneck, self).__init__()
+
+        self.r0 = ResidualX(Bottleneck, n_channels, 16, depth)
+        self.d0 = DownX()
+
+        self.r1 = ResidualX(Bottleneck, 16, 32, depth)
+        self.d1 = DownX()
+
+        self.r2 = ResidualX(Bottleneck, 32, 64, depth)
+        self.d2 = DownX()
+
+        self.r3 = ResidualX(Bottleneck, 64, 128, depth)
+        self.d3 = DownX()
+
+        self.r4 = ResidualX(Bottleneck, 128, 256, depth)
+        self.d4 = DownX()
+
+        self.r5 = ResidualX(Bottleneck, 256, 512, depth)
+        self.d5 = DownX()
+
+        self.r6 = ResidualX(Bottleneck, 512, 1024, depth)
+
+        self.u0 = UpX(1024, 1024)
+        self.r7 = ResidualX(Bottleneck, 1024, 512, depth)
+
+        self.u1 = UpX(512, 512)
+        self.r8 = ResidualX(Bottleneck, 512, 256, depth)
+
+        self.u2 = UpX(256, 256)
+        self.r9 = ResidualX(Bottleneck, 256, 128, depth)
+
+        self.u3 = UpX(128, 128)
+        self.r10 = ResidualX(Bottleneck, 128, 64, depth)
+
+        self.u4 = UpX(64, 64)
+        self.r11 = ResidualX(Bottleneck, 64, 32, depth)
+
+        self.u5 = UpX(32, 32)
+        self.r12 = ResidualX(Bottleneck, 32, 16, depth)
+     
+
+        self.output = OutConv(16, n_classes)
+        self.logSoftmax = nn.LogSoftmax(dim=1) # Normalises output over the channel dimension
+
+
+    def forward(self, x):
+        
+        ####### Beginning of U-ResNet #######
+        #####################################
+        
+        # print("X0 ", x.shape)
+        x0 = self.r0(x)
+        y = self.d0(x0)
+
+        # print("X1 ", y.shape)
+        x1 = self.r1(y)
+        y = self.d1(x1)
+
+        # print("X2 ", y.shape)
+        x2 = self.r2(y)
+        y = self.d2(x2)
+
+        # print("X3 ", y.shape)
+        x3 = self.r3(y)
+        y = self.d3(x3)
+
+        x4 = self.r4(y)
+        y = self.d4(x4)
+
+        x5 = self.r5(y)
+        y = self.d5(x5)
+
+        # print("X4 ", y.shape)
+        y = self.r6(y)
+
+
+        y = self.u0(y, x5)
+        y = self.r7(y)
+
+        # print("X5 ", y.shape)
+        y = self.u1(y, x4)
+        y = self.r8(y)
+
+        # print("X6 ", y.shape)
+        y = self.u2(y, x3)
+        y = self.r9(y)
+
+        # print("X7 ", y.shape)
+        y = self.u3(y, x2)
+        y = self.r10(y)
+
+        # print("X8 ", y.shape)
+        y = self.u4(y, x1)
+        y = self.r11(y)
+
+        y = self.u5(y, x0)
+        y = self.r12(y)
+
+        # print("X9 ", y.shape)
+        y = self.output(y)
+        y = self.logSoftmax(y)
+        return y
+
+
+
+#########################################################################
+
+### With antialiasing
+#########################################################################
+
+### Deeper Version
+class UNetX3Antialiasing(nn.Module):
+    def __init__(self, n_channels, n_classes, depth=2):
+        super(UNetX3Antialiasing, self).__init__()
+
+        self.r0 = ResidualX(BasicBlock, n_channels, 16, depth)
+        self.d0 = DownAntialias(16)
+
+        self.r1 = ResidualX(BasicBlock, 16, 32, depth)
+        self.d1 = DownAntialias(32)
+
+        self.r2 = ResidualX(BasicBlock, 32, 64, depth)
+        self.d2 = DownAntialias(64)
+
+        self.r3 = ResidualX(BasicBlock, 64, 128, depth)
+        self.d3 = DownAntialias(128)
+
+        self.r4 = ResidualX(BasicBlock, 128, 256, depth)
+        self.d4 = DownAntialias(256)
+
+        self.r5 = ResidualX(BasicBlock, 256, 512, depth)
+        self.d5 = DownAntialias(512)
+
+        self.r6 = ResidualX(BasicBlock, 512, 1024, depth)
+
+        self.u0 = UpAntialias(1024, 1024)
+        self.r7 = ResidualX(BasicBlock, 1024, 512, depth)
+
+        self.u1 = UpAntialias(512, 512)
+        self.r8 = ResidualX(BasicBlock, 512, 256, depth)
+
+        self.u2 = UpAntialias(256, 256)
+        self.r9 = ResidualX(BasicBlock, 256, 128, depth)
+
+        self.u3 = UpAntialias(128, 128)
+        self.r10 = ResidualX(BasicBlock, 128, 64, depth)
+
+        self.u4 = UpAntialias(64, 64)
+        self.r11 = ResidualX(BasicBlock, 64, 32, depth)
+
+        self.u5 = UpAntialias(32, 32)
+        self.r12 = ResidualX(BasicBlock, 32, 16, depth)
+     
+
+        self.output = OutConv(16, n_classes)
+        self.logSoftmax = nn.LogSoftmax(dim=1) # Normalises output over the channel dimension
+
+
+    def forward(self, x):
+        
+        ####### Beginning of U-ResNet #######
+        #####################################
+        
+        # print("X0 ", x.shape)
+        x0 = self.r0(x)
+        y = self.d0(x0)
+
+        # print("X1 ", y.shape)
+        x1 = self.r1(y)
+        y = self.d1(x1)
+
+        # print("X2 ", y.shape)
+        x2 = self.r2(y)
+        y = self.d2(x2)
+
+        # print("X3 ", y.shape)
+        x3 = self.r3(y)
+        y = self.d3(x3)
+
+        x4 = self.r4(y)
+        y = self.d4(x4)
+
+        x5 = self.r5(y)
+        y = self.d5(x5)
+
+        # print("X4 ", y.shape)
+        y = self.r6(y)
+
+
+        y = self.u0(y, x5)
+        y = self.r7(y)
+
+        # print("X5 ", y.shape)
+        y = self.u1(y, x4)
+        y = self.r8(y)
+
+        # print("X6 ", y.shape)
+        y = self.u2(y, x3)
+        y = self.r9(y)
+
+        # print("X7 ", y.shape)
+        y = self.u3(y, x2)
+        y = self.r10(y)
+
+        # print("X8 ", y.shape)
+        y = self.u4(y, x1)
+        y = self.r11(y)
+
+        y = self.u5(y, x0)
+        y = self.r12(y)
+
+        # print("X9 ", y.shape)
+        y = self.output(y)
+        y = self.logSoftmax(y)
+        return y
+
