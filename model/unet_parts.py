@@ -3,7 +3,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from downsample import Downsample
 
 class Down(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -211,10 +211,12 @@ class UpX(nn.Module):
         super().__init__()
         # Instantiate the stack of residual units
         self.convTrans42 = nn.ConvTranspose2d(inplanes, outplanes//2, kernel_size=2, stride=2, padding=0)
+        self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x, skip):
         x = self.convTrans42(x)
         x = torch.cat((x, skip), dim=1)
+        self.relu(x)
         return x
 
 # class DoubleConvX(nn.Module):
@@ -405,3 +407,136 @@ class Bottleneck(nn.Module):
         out = self.relu(out)
 
         return out
+
+
+
+#####################################
+# Cerberus parts
+#####################################
+
+class FeatureMapExchange(nn.Module):
+    def __init__(self):
+        super(FeatureMapExchange, self).__init__()
+
+    def forward(self, u, v, w):
+        # size of the maps along the non-shared axis (MicroBooNE Z) 
+        numZ = u.size()[2]
+
+        # print("Cerberus u in: ", u.size())
+
+        u_feature_vector, _ = torch.max(u, keepdim=False, dim=3)
+        v_feature_vector, _ = torch.max(v, keepdim=False, dim=3)
+        w_feature_vector, _ = torch.max(w, keepdim=False, dim=3)
+
+        # print("Cerberus u_feature_vector: ", u_feature_vector.size())
+
+        # u_feature_vector.size(0) instead of -1 because of: https://github.com/pytorch/pytorch/issues/3196
+        u_exchange_map = u_feature_vector[:,:,:,None].repeat_interleave(numZ, dim=3)#.expand(u_feature_vector.size(0),-1,-1,numZ)
+        v_exchange_map = v_feature_vector[:,:,:,None].repeat_interleave(numZ, dim=3)#.expand(v_feature_vector.size(0),-1,-1,numZ)
+        w_exchange_map = w_feature_vector[:,:,:,None].repeat_interleave(numZ, dim=3)#.expand(w_feature_vector.size(0),-1,-1,numZ)
+
+        # print("Cerberus u_exchange_map: ", u_exchange_map.size())
+
+        u = torch.cat((u, v_exchange_map, w_exchange_map), dim=1)
+        v = torch.cat((v, w_exchange_map, u_exchange_map), dim=1)
+        w = torch.cat((w, u_exchange_map, v_exchange_map), dim=1)
+
+        # print("Cerberus u out: ", u.size())        
+
+        return u, v, w
+
+
+class BetterFeatureMapExchange(nn.Module):
+    def __init__(self, in_planes, out_planes):
+        super(BetterFeatureMapExchange, self).__init__()
+        self.u_conv1D = nn.Conv1d(in_planes, out_planes, kernel_size=3, stride=1, padding=1)
+        self.v_conv1D = nn.Conv1d(in_planes, out_planes, kernel_size=3, stride=1, padding=1)
+        self.w_conv1D = nn.Conv1d(in_planes, out_planes, kernel_size=3, stride=1, padding=1)
+
+        self.u_conv3x3 = conv3x3(in_planes, out_planes)
+        self.v_conv3x3 = conv3x3(in_planes, out_planes)
+        self.w_conv3x3 = conv3x3(in_planes, out_planes)
+
+        self.bn_0 = nn.BatchNorm2d(out_planes)
+        self.bn_1 = nn.BatchNorm2d(out_planes)
+        self.bn_2 = nn.BatchNorm2d(out_planes)
+        
+        self.bn1D_0 = nn.BatchNorm1d(out_planes)
+        self.bn1D_1 = nn.BatchNorm1d(out_planes)
+        self.bn1D_2 = nn.BatchNorm1d(out_planes)
+        
+        self.relu = nn.ReLU(inplace=False)
+
+    def forward(self, u, v, w):
+        # size of the maps along the non-shared axis (MicroBooNE Z) 
+        numZ = u.size()[2]
+
+        # print("Cerberus u in: ", u.size())
+
+        u_feature_vector, _ = torch.max(u, keepdim=False, dim=3)
+        v_feature_vector, _ = torch.max(v, keepdim=False, dim=3)
+        w_feature_vector, _ = torch.max(w, keepdim=False, dim=3)
+
+        u_feature_vector = self.u_conv1D(u_feature_vector)
+        v_feature_vector = self.v_conv1D(v_feature_vector)
+        w_feature_vector = self.w_conv1D(w_feature_vector)
+        
+        u_feature_vector = self.bn1D_0(u_feature_vector)
+        v_feature_vector = self.bn1D_1(v_feature_vector)
+        w_feature_vector = self.bn1D_2(w_feature_vector)
+
+        
+        self.u_conv3x3(u)
+        self.v_conv3x3(v)
+        self.w_conv3x3(w)
+        
+        u = self.bn_0(u)
+        v = self.bn_1(v)
+        w = self.bn_2(w)
+        
+        u = self.relu(u)
+        v = self.relu(v)
+        w = self.relu(w)
+        
+        u_feature_vector = self.relu(u_feature_vector)
+        v_feature_vector = self.relu(v_feature_vector)
+        w_feature_vector = self.relu(w_feature_vector)
+
+        u_exchange_map = u_feature_vector[:,:,:,None].expand(-1,-1,-1,numZ)
+        v_exchange_map = v_feature_vector[:,:,:,None].expand(-1,-1,-1,numZ)
+        w_exchange_map = w_feature_vector[:,:,:,None].expand(-1,-1,-1,numZ)
+
+        u += v_exchange_map + w_exchange_map
+        v += w_exchange_map + u_exchange_map
+        w += u_exchange_map + v_exchange_map
+
+        return u, v, w
+
+
+###############################
+# Antialiased
+
+class DownAntialias(nn.Module):
+    def __init__(self, inplanes):
+        super().__init__()
+        self.maxPool = nn.MaxPool2d(kernel_size=2, stride=1)
+        self.downsample = Downsample(channels=inplanes, filt_size=3, stride=2)
+    def forward(self, x):
+        x = self.maxPool(x)
+        x = self.downsample(x)
+        return x
+
+class UpAntialias(nn.Module):
+    def __init__(self, inplanes, outplanes):
+        super().__init__()
+        # Instantiate the stack of residual units
+        self.convTrans42 = nn.ConvTranspose2d(inplanes, outplanes//2, kernel_size=3, stride=2, padding=0)
+        self.relu = nn.ReLU(inplace=True)
+        self.downsample = Downsample(channels=outplanes//2, filt_size=3, stride=1)
+
+    def forward(self, x, skip):
+        x = self.convTrans42(x)
+        x = self.downsample(x)
+        x = torch.cat((x, skip), dim=1)
+        self.relu(x)
+        return x

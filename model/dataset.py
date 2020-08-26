@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 
 class PandoraImage(Dataset):
     def __init__(self, path, imsize=384):
-        self.imsize = imsize        
+        self.imsize = imsize      
         self.data = np.fromfile(path, dtype=np.float32)
         self.fs = np.where(self.data==np.finfo(np.float32).max)[0] # Image seperator locations
         
@@ -13,16 +13,6 @@ class PandoraImage(Dataset):
     def __len__(self):
         return len(self.fs)
 
-#     @classmethod
-#     def preprocess(cls, pil_img):
-#         img_nd = np.array(pil_img)
-
-#         if len(img_nd.shape) == 2:
-#             img_nd = np.expand_dims(img_nd, axis=2)
-
-#         # HWC to CHW
-#         img_trans = img_nd.transpose((2, 0, 1))
-#         return img_trans
 
     def __getitem__(self, i):
         
@@ -66,4 +56,6 @@ class PandoraImage(Dataset):
         frame[frame>1.0]=1.0
 
 
-        return {'image': torch.from_numpy(frame[:2,:,:]), 'mask': torch.from_numpy(mask[0,:,:])}
+        return {'image_u': torch.from_numpy(frame[:2,:,:]), 'mask_u': torch.from_numpy(mask[0,:,:]), 
+                'image_v': torch.from_numpy(frame[2:4,:,:]), 'mask_v': torch.from_numpy(mask[1,:,:]),
+                'image_w': torch.from_numpy(frame[4:6,:,:]), 'mask_w': torch.from_numpy(mask[2,:,:])}
