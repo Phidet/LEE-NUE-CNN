@@ -20,14 +20,11 @@
 #include <stdlib.h>
 #include <time.h> 
 
-//#include "Persistency/FileWriter.h" //////////// Use this to write to binary (See BinaryFileWriter.h)
-
 
 #ifdef MONITORING
 #include "PandoraMonitoringApi.h"
 #endif
 
-//#include "larpandora/LArPandoraInterface/LArPandoraGeometry.h"
 
 using namespace pandora;
 
@@ -46,35 +43,7 @@ namespace lar_content
 		CaloHitVector caloHitVectorV(pCaloHitListV->begin(), pCaloHitListV->end());
 		CaloHitVector caloHitVectorW(pCaloHitListW->begin(), pCaloHitListW->end());
 
-
-		std::cout<<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n TrainingExportAlgorithm::Run() \n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"<<std::endl;
-		//const PfoList *pPfoList(nullptr);
-		////PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListNames[0], pPfoList));
-		//PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pPfoList));
-
 		bool foundSuitableShower(false);
-
-		// for (const ParticleFlowObject *const pPfo : *pPfoList) // Finds and adds showers to pfoListCrop
-		// {
-		// 	std::cout<<" LArPfoHelper::IsShower(pPfo): "<<LArPfoHelper::IsShower(pPfo)<<"   LArPfoHelper::IsNeutrinoFinalState(pPfo): "<<LArPfoHelper::IsNeutrinoFinalState(pPfo)<<std::endl;
-		// 	if (LArPfoHelper::IsShower(pPfo) && LArPfoHelper::IsNeutrinoFinalState(pPfo)) 
-		// 	{	
-		// 		unsigned int totalHits(0);
-		// 	    ClusterList clusterList;
-		// 	    LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
-		// 	    for (const Cluster *const pCluster : clusterList)
-		// 	    {
-		//         	totalHits += pCluster->GetNCaloHits();
-		// 	    }
-				
-		// 		std::cout<<"totalHits: "<<totalHits<<std::endl;
-		// 		if(totalHits>20)
-		// 		{
-		// 			foundSuitableShower=true;
-		// 			break;
-		// 		}
-		// 	}
-		// }
 
 		const MCParticleList *pMCParticleList(nullptr);
 	    CartesianVector vert = CartesianVector(0,0,0);
@@ -119,15 +88,6 @@ namespace lar_content
 
 		if(foundSuitableShower)
 		{
-			// const VertexList *pVertexList(nullptr);
-			// PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
-			// if(pVertexList->size()>1 || pVertexList->size()==0)
-			// {
-			// 	std::cout<<"!!!!!!!!!!!TrainingExportAlgorithm Vertex Number: "<<pVertexList->size()<<std::endl;
-			// 	return STATUS_CODE_FAILURE;
-			// }
-			//CartesianVector vert =  pVertexList->front()->GetPosition();
-
 			float minX(0);
 			float minZ_U(0), minZ_V(0), minZ_W(0);
 
@@ -136,36 +96,6 @@ namespace lar_content
 			const CartesianVector vertU = LArGeometryHelper::ProjectPosition(this->GetPandora(), vert, TPC_VIEW_U); // Project 3D vertex onto 2D U view
 			const CartesianVector vertV = LArGeometryHelper::ProjectPosition(this->GetPandora(), vert, TPC_VIEW_V); // Project 3D vertex onto 2D V view
 			const CartesianVector vertW = LArGeometryHelper::ProjectPosition(this->GetPandora(), vert, TPC_VIEW_W); // Project 3D vertex onto 2D W view
-			
-		 //    std::array<float, SEG>  hitDensity= {0}; // Always combining 8 wires
-		 //    //std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 0"<<std::endl;
-		 //    fillMinimizationArray(hitDensity, pPfoList, pCaloHitListU, vertU, vertU.GetX(), vertU.GetZ()-IMSIZE/3*0.3, true, TPC_VIEW_U); // vertU.GetX() == vertV.GetX() == vertW.GetX()
-		 //    //std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 1"<<std::endl;
-		 //    fillMinimizationArray(hitDensity, pPfoList, pCaloHitListV, vertV, vertV.GetX(), vertV.GetZ()-IMSIZE/3*0.3, true, TPC_VIEW_V);
-		 //    //std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 2"<<std::endl;
-		 //    fillMinimizationArray(hitDensity, pPfoList, pCaloHitListW, vertW, vertW.GetX(), vertW.GetZ()-IMSIZE/3*0.3, true, TPC_VIEW_W);
-		 //    //std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 3"<<std::endl;
-		 //    minX = findMin(hitDensity, vertU.GetX());
-		 //    //std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 4"<<std::endl;
-			// ///////////////////////////////////////////////////////////////////////////////////////
-			// /// Find minZ in U-view
-			// hitDensity= {0}; // Always combining 8 wires
-			// fillMinimizationArray(hitDensity, pPfoList, pCaloHitListU, vertU, vertU.GetZ(), minX, false, TPC_VIEW_U);
-			// minZ_U = findMin(hitDensity, vertU.GetZ());
-			// //std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 5"<<std::endl;
-			// ///////////////////////////////////////////////////////////////////////////////////////
-			// /// Find minZ in V-view
-			// hitDensity= {0}; // Always combining 8 wires
-			// fillMinimizationArray(hitDensity, pPfoList, pCaloHitListV, vertV, vertV.GetZ(), minX, false, TPC_VIEW_V);
-			// minZ_V = findMin(hitDensity, vertV.GetZ());
-			// //std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 6"<<std::endl;
-			// ///////////////////////////////////////////////////////////////////////////////////////
-			// /// Find minZ in W-view
-			// hitDensity= {0}; // Always combining 8 wires
-			// fillMinimizationArray(hitDensity, pPfoList, pCaloHitListW, vertW, vertW.GetZ(), minX, false, TPC_VIEW_W);
-			// minZ_W = findMin(hitDensity, vertW.GetZ());
-
-			// //std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7"<<std::endl;
 
 			float lowestX(std::numeric_limits<float>::max()-1.f);
 			float highestX(-std::numeric_limits<float>::max()+1.f);
@@ -247,10 +177,6 @@ namespace lar_content
   			srand (time(NULL));
   			for(int i=0; i<1; i++)
   			{
-				// minX = vertU.GetX()-IMSIZE*0.3/2 + (rand()%160-80)*0.3f;
-				// minZ_U = vertU.GetZ()-IMSIZE*0.3/2 + (rand()%160-80)*0.3f;
-				// minZ_V = vertV.GetZ()-IMSIZE*0.3/2 + (rand()%160-80)*0.3f;
-				// minZ_W = vertW.GetZ()-IMSIZE*0.3/2 + (rand()%160-80)*0.3f;
 
   				const int diffX = (int)((highestX-lowestX)/0.3f);
   				const int diffZ_U = (int)((highestZ_U-lowestZ_U)/0.3f);
@@ -289,14 +215,6 @@ namespace lar_content
 				else
 					minZ_W = highestZ_W -IMSIZE*0.3f + (rand()%randZ_W)*0.3f;
 
-
-
-
-
-				// if(diffZ_U>0) minZ_U = lowestZ_U - (rand()%(IMSIZE-diffZ_U))*0.3f;
-				// if(diffZ_V>0) minZ_V = lowestZ_V - (rand()%(IMSIZE-diffZ_V))*0.3f;
-				// if(diffZ_W>0) minZ_W = lowestZ_W - (rand()%(IMSIZE-diffZ_W))*0.3f;
-
 			
 				if(minX>vertU.GetX()-10*0.3f) minX=vertU.GetX()-10*0.3f;
 				if(minX<vertU.GetX()-(IMSIZE-10)*0.3f) minX=vertU.GetX()-(IMSIZE-10)*0.3f;
@@ -309,7 +227,6 @@ namespace lar_content
 			
 
 				PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, WriteDetectorGaps(minZ_U, minZ_V, minZ_W));
-				//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 8"<<std::endl;
 
 				PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateImage(caloHitVectorU, minX, minZ_U));
 				PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulateImage(caloHitVectorV, minX, minZ_V));
@@ -325,18 +242,14 @@ namespace lar_content
 
 	StatusCode TrainingExportAlgorithm::WriteDetectorGaps(const float minZ_U, const float minZ_V, const float minZ_W)
 	{
-		//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.1"<<std::endl;
 		std::array<float, 3*IMSIZE> gaps_UVW = {0};
 		float minZ(0.f);
-		//const DetectorGapList &detectorGapList(this->GetPandora().GetGeometry()->GetDetectorGapList());
-		//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.2"<<std::endl;
 		for (const DetectorGap *const pDetectorGap : this->GetPandora().GetGeometry()->GetDetectorGapList())
 		{
 			const LineGap *const pLineGap = dynamic_cast<const LineGap*>(pDetectorGap);
         	if (!pLineGap) throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-		//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.3"<<std::endl;
+
 			const int gapType = static_cast<int>(pLineGap->GetLineGapType());
-		//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.4"<<std::endl;
 			switch(gapType)
 			{
 			case TPC_WIRE_GAP_VIEW_U: //gapType==0
@@ -352,8 +265,7 @@ namespace lar_content
 				std::cout<<"Undeclared linegap type in TrainingExportAlgorithm::WriteDetectorGaps." <<std::endl;
 				return STATUS_CODE_FAILURE;
 			}
-		//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.5"<<std::endl;
-		//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ gapType: "<<gapType<<std::endl;
+
 			const int gapStart = std::max(0,(int)((pLineGap->GetLineStartZ()-minZ)/0.3f));
 			const int gapEnd = std::min(IMSIZE-1,(int)((pLineGap->GetLineEndZ()-minZ)/0.3f));
 			for(int i=gapStart; i<=gapEnd; i++)
@@ -361,19 +273,19 @@ namespace lar_content
 				gaps_UVW[IMSIZE*gapType+i] = 1.f;
 			}
 		}
-				//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.6"<<std::endl;
+
 		std::ofstream file("OutTest2/viewUVW.bin", std::ios::out | std::ios::binary | std::ios::app); 
 		if(!file)
 		{
 			std::cout<<"Problem opening/creating binary file in TrainingExportAlgorithm::PopulateImage."<<std::endl;
 			return STATUS_CODE_FAILURE;
 		}
-				//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.7"<<std::endl;
-		const float startMarker = std::numeric_limits<float>::max();//caloHitVector.size();
+
+		const float startMarker = std::numeric_limits<float>::max();
 		file.write((char*)&startMarker, sizeof(startMarker));
 		file.write((char*)&gaps_UVW, sizeof(gaps_UVW));
 		file.close();
-		//std::cout<<"++++++++++++ ++++++++++++ ++++++++++++ Point 7.8"<<std::endl;
+
 		return STATUS_CODE_SUCCESS;
 	}
 
@@ -402,8 +314,8 @@ namespace lar_content
 				const float xDiff = v.GetX()-v2.GetX();
 				const float zDiff = v.GetZ()-v2.GetZ();
 				const float squaredDist = xDiff*xDiff+zDiff*zDiff;
-				if(squaredDist>2000) weight *= 1.f;//6000.0/(squaredDist+4000.0);
-				//std::cout<<"Weight: "<<weight<<"  sqdst: "<<squaredDist<<std::endl;
+				if(squaredDist>2000) weight *= 1.f;
+
 			} 
 				catch(StatusCodeException &statusCodeException)
 			{
@@ -570,20 +482,6 @@ namespace lar_content
 	    		file.write((char*)&pixel, sizeof(pixel));
 	    	}
 	    }
-
-	 //    for (const CaloHit *const pCaloHit : *pCaloHitList)
-		// {
-		// 	if(!PandoraContentApi::IsAvailable(*this, pCaloHit))
-		// 	{	
-		// 		const float x = pCaloHit->GetPositionVector().GetX();
-	 //    		const float z = pCaloHit->GetPositionVector().GetZ();
-	 //    		file.write((char*)&x, sizeof(x));
-	 //    		file.write((char*)&z, sizeof(z));
-		// 		std::array<float, 4> pixel = {0};
-		// 		pixel[3] = 1.0f;
-		// 		file.write((char*)&pixel, sizeof(pixel));
-		// 	}
-		// }
 
 	    file.close();
 	    return STATUS_CODE_SUCCESS;

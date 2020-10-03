@@ -295,41 +295,6 @@ namespace lar_content{
 		torch::save(availability, torch::str("/home/philip/Documents/Pandora5/LArReco/bin/DeepTesting/CerberusAvailability.pt"));
 
 
-
-	    // std::string temporaryListName;
-
-	    // const ClusterList *pTemporaryList2(nullptr);
-	 //   	const ClusterList localClusterList(*pTemporaryList2);
-	 //   	//std::cout<<"MMM - 0 - pTemporaryList->size(): "<<pTemporaryList->size()<<std::endl;
-	 //   	std::cout<<"MMM - 0 - pTemporaryList2->size(): "<<pTemporaryList2->size()<<std::endl;
-	 //    //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pTemporaryList, temporaryListName));
-	 //    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pTemporaryList, temporaryListName));
-
-	 //    //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::TemporarilyReplaceCurrentList
-		
-			
-		// for (const Cluster *pClusterToMove : localClusterList)
-		// {
-		// 	std::cout<<"MMM - 1.1 - pTemporaryList->size(): "<<pTemporaryList->size()<<std::endl;
-		// 	PandoraContentApi::Cluster::Parameters clusterParameters;
-		// 	CaloHitList caloHitList;
-  //  	 		pClusterToMove->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
-		// 	clusterParameters.m_caloHitList = caloHitList;
-		// 	if (!clusterParameters.m_caloHitList.empty()) PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParameters, pClusterToMove));
-		// }
-
-		// std::cout<<"MMM - 2 - pTemporaryList->size(): "<<pTemporaryList->size()<<std::endl;
-
-		// const ClusterList *pOriginalClusterList(nullptr);
-		// PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pOriginalClusterList));
-		// std::cout<<"MMM - 0 - pOriginalClusterList->size(): "<<pOriginalClusterList->size()<<std::endl;
-		// std::string originalClustersListName;
-		// PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeReclustering(*this, TrackList(), *pOriginalClusterList, originalClustersListName));
-		// const ClusterList *pTemporaryList(nullptr);
-		// PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTemporaryList));
-		
-		//const ClusterList localClusterList(*pTemporaryList);
-		//PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, localClusterList, m_outputClusterListName));
 		const ClusterList *pTemporaryClusterList(nullptr);
 	    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTemporaryClusterList));
 		std::cout<<"MMM - 1 - pTemporaryClusterList->size(): "<<pTemporaryClusterList->size()<<std::endl;
@@ -361,13 +326,6 @@ namespace lar_content{
 	    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTemporaryPfoListX));
 		std::cout<<"NNN - 2 - pTemporaryPfoListX->size(): "<<pTemporaryPfoListX->size()<<std::endl;
 
-		// PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_outputPfoListName));
-		// PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Pfo>(*this, m_outputPfoListName));
-
-		// const PfoList *pTemporaryPfoListX2(nullptr);
-	 //    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTemporaryPfoListX2));
-		// std::cout<<"NNN - 2 - pTemporaryPfoListX2->size(): "<<pTemporaryPfoListX2->size()<<std::endl;
-
 
 		torch::Tensor pandoraRecoPost = torch::zeros({1,3,IMSIZE,IMSIZE}, torch::kFloat32); //Creates the data tensor
 		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PopulatePandoraReconstructionTensor(pandoraRecoPost, pTemporaryPfoListX, TPC_VIEW_U, 0, minX, minZ_U));
@@ -393,24 +351,9 @@ namespace lar_content{
 			const bool isShower = LArPfoHelper::IsShower(pPfo);
 			const bool neutrinoFinalState = LArPfoHelper::IsNeutrinoFinalState(pPfo);
 			
-			// float length;
-			// try
-			// {
-			// 	std::cout<<"### CerberusAlgorithm::Backtracing: Point 4.011"<<std::endl;
-			// 	length = LArPfoHelper::GetThreeDLengthSquared(pPfo);
-			// 	std::cout<<"### CerberusAlgorithm::Backtracing: Point 4.012"<<std::endl;
-			// }
-			// catch(StatusCodeException &)
-			// {
-			// 	std::cout<<"### CerberusAlgorithm::Backtracing: Point 4.013"<<std::endl;
-			// 	continue;
-			// }
 
 			if(!neutrinoFinalState || !isShower) continue;
-			//if(!neutrinoFinalState || !isShower) continue; // && !isShower && length>50*50 // Avoids the removal of hits from long cosmic tracks. Clasdsical Pandora algorithms are better at recognizing these. 
-			//if(!neutrinoFinalState && isShower) continue; // Avoids the removal of hits from long cosmic tracks. Clasdsical Pandora algorithms are better at recognizing these. 
 
-		   	// std::cout<<"### CerberusAlgorithm::Backtracing: Point 4.014"<<std::endl;
 		   	for (const Cluster *const pCluster : clusterList)
 	    	{
 				std::cout<<"---- ---- New Cluster ----  ---- "<<std::endl;
@@ -426,31 +369,25 @@ namespace lar_content{
 
 					if((!isShower && caloHitClass==0)||(isShower && caloHitClass==1))//||(neutrinoFinalState && caloHitClass==2)||(!neutrinoFinalState && caloHitClass!=2))
 					{
-						// std::cout<<"### CerberusAlgorithm::Backtracing: Point 4.02"<<std::endl;
     					caloHitListChange.push_back(pCaloHit);
 
     					CaloHitList caloHitListUpdated;
 			    		pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitListUpdated);
 
-						//std::cout<<"### CerberusAlgorithm::Backtracing: Point 4.1 - CaloHitChanged - caloHit available: "<<PandoraContentApi::IsAvailable(*this, pCaloHit)<<" caloHitList.size(): "<<caloHitListUpdated.size()<<" bestCaloHitList.size()"<<bestCaloHitList.size()<<std::endl;
-						// std::cout<<"### CerberusAlgorithm::Backtracing: Point 4.03 - clusterList.size():"<<clusterList.size()<<std::endl;
 						if(caloHitListUpdated.size()==1)
 						{				    		
 				    		ClusterList clusterListAllViews;
 				    		LArPfoHelper::GetTwoDClusterList(pPfo, clusterListAllViews);
 
-							// std::cout<<"### CerberusAlgorithm::Backtracing: Point 4.04 - clusterList.size():"<<clusterList.size()<<" - clusterListAllViews: "<<clusterListAllViews.size()<<std::endl;
+
 							ClusterList clusterListRemove;
 							LArPfoHelper::GetClusters(pPfo, tpcView, clusterListRemove);
-							// std::cout<<"### CerberusAlgorithm::Backtracing: Point 4.0403"<<std::endl;
+
 							for (const Cluster *const pClusterRemove : clusterListRemove)
 							{
-								// std::cout<<"### CerberusAlgorithm::Backtracing: Point 4.0404"<<std::endl;
 								PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pPfo, pClusterRemove));
 								clusterListToDelete.push_back(pClusterRemove);
 							}
-
-							// std::cout<<"### CerberusAlgorithm::Backtracing: Point 4.0411 - PandoraContentApi::IsAvailable(*this, pCluster): "<<PandoraContentApi::IsAvailable(*this, pCluster)<<std::endl;
 
 							if(clusterListAllViews.size()==1)
 							{
@@ -463,7 +400,6 @@ namespace lar_content{
 							}
 							break;
 						}
-						// std::cout<<"### CerberusAlgorithm::Backtracing: Point 4.05"<<std::endl;
 						PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*this, pCluster, pCaloHit));
 					}
 				}
@@ -471,18 +407,14 @@ namespace lar_content{
 		}
 		
 
-		// std::cout<<"### CerberusAlgorithm::Backtracing: Point 5"<<std::endl;
-		//PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, clusterListToDelete));
+
 		for (const Cluster *const pCluster : clusterListToDelete)
 		{
-			// std::cout<<"### CerberusAlgorithm::Backtracing: Point 5.1"<<std::endl;
-			PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pCluster)); // listName
+			PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pCluster));
 		}
-		// std::cout<<"### CerberusAlgorithm::Backtracing: Point 5.2"<<std::endl;
-		//PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pfoListToDelete));
+
 		for (const ParticleFlowObject *const pPfo : pfoListToDelete)
 		{	
-			// std::cout<<"### CerberusAlgorithm::Backtracing: Point 5.3 - GetNParentPfos(): "<<pPfo->GetNParentPfos()<<" - GetNDaughterPfos(): "<<pPfo->GetNDaughterPfos()<<std::endl;
 			PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfo, m_pfoListName));
 		}
 	    
@@ -549,52 +481,37 @@ namespace lar_content{
 
 	    const CaloHitList *pCaloHitList(nullptr);
 	    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
-	    // std::cout<<"### CerberusAlgorithm::CaloHitReallocation: Point 1.0"<<std::endl;
 		for (const CaloHit *const pCaloHit : *pCaloHitList)
 		{
 			if(pCaloHit->GetHitType()!=tpcView) continue;
 			const bool availability = PandoraContentApi::IsAvailable(*this, pCaloHit);
 			int x, z;
 			if(!availability || !inViewXZ(x, z, pCaloHit, minX, minZ)) continue; //Also sets x,z value
-			// std::cout<<"### CerberusAlgorithm::CaloHitReallocation: Point 1.3"<<std::endl; 
 			const int caloHitClass = tensor.index({0, x, z}).item<int>();
 			const Cluster *pBestCluster(nullptr);
-			// std::cout<<"### CerberusAlgorithm::CaloHitReallocation: Point 2"<<std::endl;
 			FindSuitableCluster(pCaloHit, pBestCluster, caloHitClass, 250);
-			// std::cout<<"### CerberusAlgorithm::CaloHitReallocation: Point 3"<<std::endl;
 			if (pBestCluster) 
 			{
-				// std::cout<<"### CerberusAlgorithm::CaloHitReallocation: Point 4.0"<<std::endl;
 				PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pBestCluster, pCaloHit)); // Meaning: if it is not a null pointer add the hit to the cluster
-				// std::cout<<"### CerberusAlgorithm::CaloHitReallocation: Point 5.0"<<std::endl;
 			}
 			else if(caloHitClass==1 || ( caloHitClass==0 && noShowerCluster)) // Only create new clusters for tracks
 			{
 				if(caloHitClass==0) noShowerCluster = false;
 
-				// std::cout<<"### CerberusAlgorithm::CaloHitReallocation: Point 6.0"<<std::endl;
-
 				const ClusterList *pTemporaryClusterListX(nullptr);
 			    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTemporaryClusterListX));
-				// std::cout<<"WWW - 0 - pTemporaryClusterListX->size(): "<<pTemporaryClusterListX->size()<<std::endl;
 
 				const PfoList *pTemporaryPfoListY(nullptr);
 			    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTemporaryPfoListY));
-				// std::cout<<"LLL - 0 - pTemporaryPfoListY->size(): "<<pTemporaryPfoListY->size()<<std::endl;
-
 
 				PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, CerberusAlgorithm::ClusterCreation(pCaloHit, caloHitClass));
-				// std::cout<<"### CerberusAlgorithm::CaloHitReallocation: Point 7.0"<<std::endl;
 			}
 		}
-		// std::cout<<"### CerberusAlgorithm::CaloHitReallocation: Point 8.0"<<std::endl;
 	    return STATUS_CODE_SUCCESS;
 	}
 
 
 
-	// Start intense dev area ========================================================================================================================================
-	// ===============================================================================================================================================================
 	StatusCode CerberusAlgorithm::ClusterCreation(const CaloHit *const pCaloHit, const int caloHitClass)
 	{
 		const bool available = PandoraContentApi::IsAvailable(*this, pCaloHit);
@@ -628,15 +545,12 @@ namespace lar_content{
 	    return STATUS_CODE_SUCCESS;
 	}
 
-	// https://github.com/PandoraPFA/ExampleContent/blob/ce454a2ef9dd56a94b4a8d12f69e69d38dffa025/src/ExampleAlgorithms/CreatePfosAlgorithm.cc
 	StatusCode CerberusAlgorithm::PfoCreation(const ParticleFlowObject *pNeutrinoPfo)
 	{
 		const PfoList *pTemporaryPfoListY(nullptr);
 	    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pTemporaryPfoListY));
 		std::cout<<"LLL - 1 - pTemporaryPfoListY->size(): "<<pTemporaryPfoListY->size()<<std::endl;
 
-		// std::cout<<"CerberusAlgorithm::PfoCreation -Point 0"<<std::endl;
-	    // Create clusters using clusters and vertices in the current list as the building blocks.
 	    const ClusterList *pClusterList(nullptr);
 	    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
 	    const PfoList *pTemporaryList(nullptr);
@@ -672,7 +586,6 @@ namespace lar_content{
 		    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pPfoList));
 			for (const ParticleFlowObject *const pPfo : *pPfoList)
     		{
-    			// std::cout<<"CerberusAlgorithm::PfoCreation -Point 7"<<std::endl;
 				const bool isShower = LArPfoHelper::IsShower(pPfo);
 				const bool neutrinoFinalState = LArPfoHelper::IsNeutrinoFinalState(pPfo);
     			if(neutrinoFinalState && ((isShower && pCluster->GetParticleId()==E_MINUS) || (!isShower && pCluster->GetParticleId()==MU_MINUS))) // Cluster has to be available and match pfo type
@@ -686,7 +599,6 @@ namespace lar_content{
 			    	}
 			    	break;
 		    	}
-			    // std::cout<<"CerberusAlgorithm::PfoCreation -Point 8"<<std::endl;
     		}
 
 			const PfoList *pTemporaryPfoListY2(nullptr);
@@ -706,7 +618,6 @@ namespace lar_content{
 	        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pNeutrinoPfo, pPfo));
 		}
 
-	    // Choose to save the temporary pfos under a specified name and to set the pfo list to be the current list.
 	    if (!pTemporaryList->empty())
 	    {
 	        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_outputPfoListName));
@@ -716,39 +627,16 @@ namespace lar_content{
 	    return STATUS_CODE_SUCCESS;
 	}
 
-	// StatusCode CerberusAlgorithm::PfoCreation()
-	// {
-	//     const ClusterList *pClusterList(nullptr);
-	//     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
-	   	
-	//    	for (const Cluster *const pCluster : clusterList)
- //    	{
-	// 		const bool available = PandoraContentApi::IsAvailable(*this, pCaloHit);
-	// 		if(!available) continue;
- //    	}
-
-	//     return STATUS_CODE_SUCCESS;
-	// }
-
-	// End intense dev area ========================================================================================================================================
-	// =============================================================================================================================================================
-
 
 
 	// https://github.com/PandoraPFA/LArContent/blob/d4e5aa8b34cae1809f24c1f61d1d2ed0d7994096/larpandoracontent/LArHelpers/LArPfoHelper.cc
 	StatusCode CerberusAlgorithm::FindSuitableCluster(const CaloHit *const pCaloHit, const Cluster *&pBestCluster, const int caloHitClass, const float maxDistance)
 	{
 		const HitType tpcView(pCaloHit->GetHitType());
-		//const ClusterList *pInputClusterList(nullptr);
-		//PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pInputClusterList));
 
 		const PfoList *pPfoList(nullptr);
 		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
-		
-		// ClusterList clusterList;
-	 //    std::cout<<"PPP CerberusAlgorithm::FindClosestTrackCluster - pClusterListTemp->size(): "<<pClusterListTemp->size()<<std::endl;
-	 //    LArClusterHelper::GetClustersByHitType(*pClusterListTemp, tpcView, clusterList);
-	    
+			    
 	    float closestDistanceSquared(maxDistance * maxDistance);
 	    const CartesianVector positionVector(pCaloHit->GetPositionVector());
 	    
@@ -768,29 +656,11 @@ namespace lar_content{
 		    	
 		    	const CartesianVector clusterDirection(pCandidateCluster->GetInitialDirection()); // GetDirection?????
 		    	const CartesianVector hitDirection(positionVector-candidateCentroid);
-		        //const float theta = clusterDirection.GetOpeningAngle(hitDirection);
 
-   //  		std::ofstream file("/home/philip/Documents/Pandora5/LArReco/bin/DeepTesting/pos.bin", std::ios::out | std::ios::binary | std::ios::app); 
-			// std::array<int, 8> pos = {0};
-			// pos[0] = (int) candidateCentroid.GetX();
-			// pos[1] = (int) candidateCentroid.GetZ();
-			// pos[2] = (int) clusterDirection.GetX();
-			// pos[3] = (int) clusterDirection.GetZ();
-
-			// pos[4] = (int) positionVector.GetX();
-			// pos[5] = (int) positionVector.GetZ();
-			// pos[6] = (int) hitDirection.GetX();
-			// pos[7] = (int) hitDirection.GetZ();
-			// file.write((char*)&pos, sizeof(pos));
-			// file.close();
-
-
-		        // std::cout<<"!!! CerberusAlgorithm::FindClosestTrackCluster: Point 6 - distanceSquared" <<distanceSquared<<" - theta: "<<theta<<std::endl;
 		        if (distanceSquared < closestDistanceSquared)// && ((theta<M_PI/15.f || theta>M_PI*(1-1/15.f)) || distanceSquared<50.f*50.f))
 		        {
 		            closestDistanceSquared = distanceSquared;
 		            pBestCluster = pCandidateCluster;
-		    		// std::cout<<"!!! CerberusAlgorithm::FindClosestTrackCluster: Point 7"<<std::endl;
 		        }
 			}
 		}
@@ -811,14 +681,11 @@ namespace lar_content{
 		    	
 		    	const CartesianVector clusterDirection(pCandidateCluster->GetInitialDirection()); // GetDirection?????
 		    	const CartesianVector hitDirection(positionVector-candidateCentroid);
-		        //const float theta = clusterDirection.GetOpeningAngle(hitDirection);
 
-		        // std::cout<<"!!! CerberusAlgorithm::FindClosestTrackCluster: Point 6X - distanceSquared" <<distanceSquared<<" - theta: "<<theta<<std::endl;
 		        if (distanceSquared < closestDistanceSquared)// && ((theta<M_PI/15.f || theta>M_PI*(1-1/15.f)) || distanceSquared<50.f*50.f))
 		        {
 		            closestDistanceSquared = distanceSquared;
 		            pBestCluster = pCandidateCluster;
-		    		// std::cout<<"!!! CerberusAlgorithm::FindClosestTrackCluster: Point 7X"<<std::endl;
 		        }
 			}
     	}
@@ -881,12 +748,9 @@ namespace lar_content{
 			if(!inViewXZ(x, z, pCaloHit, minX, minZ)) continue; // Skipps hits that are not in the crop area
 			std::array<float, 2> pixel = {0};
 			const MCParticleWeightMap  &mcParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
-			// Populates prediction image
-			//std::cout<<"--------------------- New Hit"<<std::endl;
 			for (const MCParticleWeightMap::value_type &mapEntry : mcParticleWeightMap)
 			{
 				const int particleID = mapEntry.first->GetParticleId();
-				//std::cout<<"--------------------- particleID: "<<particleID<<" mapEntry.second"<<mapEntry.second<<std::endl;
 				switch(particleID)
 				{
 					case 22: case 11: case -11:
@@ -936,7 +800,6 @@ namespace lar_content{
 				const float zDiff = v.GetZ()-v2.GetZ();
 				const float squaredDist = xDiff*xDiff+zDiff*zDiff;
 				if(squaredDist>2000) weight *= 1.f;//6000.0/(squaredDist+4000.0);
-				//std::cout<<"Weight: "<<weight<<"  sqdst: "<<squaredDist<<std::endl;
 			} 
 				catch(StatusCodeException &statusCodeException)
 			{
@@ -1056,12 +919,9 @@ namespace lar_content{
 	{
 		// Read settings from xml file here
 		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
-		// PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-	 //        "PfoListNames", m_pfoListNames));
+
 		PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
 	        "CaloHitListNames", m_caloHitListNames));
-		// PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-	 //        "ClusterListNames", m_clusterListNames));
 
 		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputClusterListName", m_outputClusterListName));
 		PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
@@ -1072,11 +932,6 @@ namespace lar_content{
 	        return STATUS_CODE_INVALID_PARAMETER;
 	    }
 
-	   	// if (m_clusterListNames.empty())
-	    // {
-	    //     std::cout << "CerberusAlgorithm::ReadSettings - Must provide names of cluster lists for use in U-Net." << std::endl;
-	    //     return STATUS_CODE_INVALID_PARAMETER;
-	    // }
 
 		return STATUS_CODE_SUCCESS;
 	}

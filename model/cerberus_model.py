@@ -1,9 +1,7 @@
 ###################################################################
-# Cerberus
+# Cerberus based on https://github.com/LArbys/ub_UResNet/blob/master/build_net.py and the examples in the torchvision library
 ###################################################################
 
-"""Based on https://github.com/LArbys/ub_UResNet/blob/master/build_net.py and the examples in the torchvision library"""
-""" Full assembly of the parts to form the complete network """
 import torch
 import torch.nn.functional as F
 from unet_parts import *
@@ -214,7 +212,7 @@ class Cerberus2(nn.Module):
         self.v_do0 = DownX()
         self.w_do0 = DownX()
 
-        self.fme0 = BetterFeatureMapExchange(16, 16)
+        self.fme0 = FeatureMapExchange(16, 16)
 
         self.u_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.v_re1 = ResidualX(BasicBlock, 16, 32, depth)
@@ -255,7 +253,7 @@ class Cerberus2(nn.Module):
         self.v_re6 = ResidualX(BasicBlock, 512, 1024, depth)
         self.w_re6 = ResidualX(BasicBlock, 512, 1024, depth)
 
-        self.fme1 = BetterFeatureMapExchange(1024, 1024)
+        self.fme1 = FeatureMapExchange(1024, 1024)
 
         self.u_up0 = UpX(1024, 1024)
         self.v_up0 = UpX(1024, 1024)
@@ -292,7 +290,7 @@ class Cerberus2(nn.Module):
         self.v_re11 = ResidualX(BasicBlock, 64, 32, depth)
         self.w_re11 = ResidualX(BasicBlock, 64, 32, depth)
 
-        self.fme2 = BetterFeatureMapExchange(32, 32)
+        self.fme2 = FeatureMapExchange(32, 32)
 
         self.u_up5 = UpX(32, 32)
         self.v_up5 = UpX(32, 32)
@@ -301,7 +299,7 @@ class Cerberus2(nn.Module):
         self.v_re12 = ResidualX(BasicBlock, 32, 16, depth)
         self.w_re12 = ResidualX(BasicBlock, 32, 16, depth)
 
-        self.fme3 = BetterFeatureMapExchange(16, 16)
+        self.fme3 = FeatureMapExchange(16, 16)
 
         self.u_output = OutConv(16, n_classes)
         self.v_output = OutConv(16, n_classes)
@@ -447,7 +445,7 @@ class Cerberus3(nn.Module):
         self.v_do0 = DownX()
         self.w_do0 = DownX()
 
-        self.fme0 = BetterFeatureMapExchange(16, 16)
+        self.fme0 = FeatureMapExchange(16, 16)
 
         self.u_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.v_re1 = ResidualX(BasicBlock, 16, 32, depth)
@@ -456,7 +454,7 @@ class Cerberus3(nn.Module):
         self.v_do1 = DownX()
         self.w_do1 = DownX()
 
-        self.fme1 = BetterFeatureMapExchange(32, 32)
+        self.fme1 = FeatureMapExchange(32, 32)
 
         self.u_re2 = ResidualX(BasicBlock, 32, 64, depth)
         self.v_re2 = ResidualX(BasicBlock, 32, 64, depth)
@@ -465,7 +463,7 @@ class Cerberus3(nn.Module):
         self.v_do2 = DownX()
         self.w_do2 = DownX()
 
-        self.fme2 = BetterFeatureMapExchange(64, 64)
+        self.fme2 = FeatureMapExchange(64, 64)
 
         self.u_re3 = ResidualX(BasicBlock, 64, 128, depth)
         self.v_re3 = ResidualX(BasicBlock, 64, 128, depth)
@@ -474,7 +472,7 @@ class Cerberus3(nn.Module):
         self.v_do3 = DownX()
         self.w_do3 = DownX()
 
-        self.fme3 = BetterFeatureMapExchange(128, 128)
+        self.fme3 = FeatureMapExchange(128, 128)
 
         self.u_re4 = ResidualX(BasicBlock, 128, 256, depth)
         self.v_re4 = ResidualX(BasicBlock, 128, 256, depth)
@@ -483,7 +481,7 @@ class Cerberus3(nn.Module):
         self.v_do4 = DownX()
         self.w_do4 = DownX()
 
-        self.fme4 = BetterFeatureMapExchange(256, 256)
+        self.fme4 = FeatureMapExchange(256, 256)
 
         self.u_re5 = ResidualX(BasicBlock, 256, 512, depth)
         self.v_re5 = ResidualX(BasicBlock, 256, 512, depth)
@@ -492,13 +490,13 @@ class Cerberus3(nn.Module):
         self.v_do5 = DownX()
         self.w_do5 = DownX()
 
-        self.fme5 = BetterFeatureMapExchange(512, 512)
+        self.fme5 = FeatureMapExchange(512, 512)
 
         self.u_re6 = ResidualX(BasicBlock, 512, 1024, depth)
         self.v_re6 = ResidualX(BasicBlock, 512, 1024, depth)
         self.w_re6 = ResidualX(BasicBlock, 512, 1024, depth)
 
-        self.fme6 = BetterFeatureMapExchange(1024, 1024)
+        self.fme6 = FeatureMapExchange(1024, 1024)
 
         self.u_up0 = UpX(1024, 1024)
         self.v_up0 = UpX(1024, 1024)
@@ -507,7 +505,7 @@ class Cerberus3(nn.Module):
         self.v_re7 = ResidualX(BasicBlock, 1024, 512, depth)
         self.w_re7 = ResidualX(BasicBlock, 1024, 512, depth)
 
-        self.fme7 = BetterFeatureMapExchange(512, 512)
+        self.fme7 = FeatureMapExchange(512, 512)
 
         self.u_up1 = UpX(512, 512)
         self.v_up1 = UpX(512, 512)
@@ -516,7 +514,7 @@ class Cerberus3(nn.Module):
         self.v_re8 = ResidualX(BasicBlock, 512, 256, depth)
         self.w_re8 = ResidualX(BasicBlock, 512, 256, depth)
 
-        self.fme8 = BetterFeatureMapExchange(256, 256)
+        self.fme8 = FeatureMapExchange(256, 256)
 
         self.u_up2 = UpX(256, 256)
         self.v_up2 = UpX(256, 256)
@@ -525,7 +523,7 @@ class Cerberus3(nn.Module):
         self.v_re9 = ResidualX(BasicBlock, 256, 128, depth)
         self.w_re9 = ResidualX(BasicBlock, 256, 128, depth)
 
-        self.fme9 = BetterFeatureMapExchange(128, 128)
+        self.fme9 = FeatureMapExchange(128, 128)
 
         self.u_up3 = UpX(128, 128)
         self.v_up3 = UpX(128, 128)
@@ -534,7 +532,7 @@ class Cerberus3(nn.Module):
         self.v_re10 = ResidualX(BasicBlock, 128, 64, depth)
         self.w_re10 = ResidualX(BasicBlock, 128, 64, depth)
 
-        self.fme10 = BetterFeatureMapExchange(64, 64)
+        self.fme10 = FeatureMapExchange(64, 64)
 
         self.u_up4 = UpX(64, 64)
         self.v_up4 = UpX(64, 64)
@@ -543,7 +541,7 @@ class Cerberus3(nn.Module):
         self.v_re11 = ResidualX(BasicBlock, 64, 32, depth)
         self.w_re11 = ResidualX(BasicBlock, 64, 32, depth)
 
-        self.fme11 = BetterFeatureMapExchange(32, 32)
+        self.fme11 = FeatureMapExchange(32, 32)
 
         self.u_up5 = UpX(32, 32)
         self.v_up5 = UpX(32, 32)
@@ -552,7 +550,7 @@ class Cerberus3(nn.Module):
         self.v_re12 = ResidualX(BasicBlock, 32, 16, depth)
         self.w_re12 = ResidualX(BasicBlock, 32, 16, depth)
 
-        self.fme12 = BetterFeatureMapExchange(16, 16)
+        self.fme12 = FeatureMapExchange(16, 16)
 
         self.u_output = OutConv(16, n_classes)
         self.v_output = OutConv(16, n_classes)
@@ -717,7 +715,7 @@ class Cerberus4(nn.Module):
         self.v_do0 = DownX()
         self.w_do0 = DownX()
 
-        self.fme0 = BetterFeatureMapExchange(16, 16)
+        self.fme0 = FeatureMapExchange(16, 16)
 
         self.u_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.v_re1 = ResidualX(BasicBlock, 16, 32, depth)
@@ -726,7 +724,7 @@ class Cerberus4(nn.Module):
         self.v_do1 = DownX()
         self.w_do1 = DownX()
 
-        self.fme1 = BetterFeatureMapExchange(32, 32)
+        self.fme1 = FeatureMapExchange(32, 32)
 
         self.u_re2 = ResidualX(BasicBlock, 32, 64, depth)
         self.v_re2 = ResidualX(BasicBlock, 32, 64, depth)
@@ -735,7 +733,7 @@ class Cerberus4(nn.Module):
         self.v_do2 = DownX()
         self.w_do2 = DownX()
 
-        self.fme2 = BetterFeatureMapExchange(64, 64)
+        self.fme2 = FeatureMapExchange(64, 64)
 
         self.u_re3 = ResidualX(BasicBlock, 64, 128, depth)
         self.v_re3 = ResidualX(BasicBlock, 64, 128, depth)
@@ -797,7 +795,7 @@ class Cerberus4(nn.Module):
         self.v_re10 = ResidualX(BasicBlock, 128, 64, depth)
         self.w_re10 = ResidualX(BasicBlock, 128, 64, depth)
 
-        self.fme10 = BetterFeatureMapExchange(64, 64)
+        self.fme10 = FeatureMapExchange(64, 64)
 
         self.u_up4 = UpX(64, 64)
         self.v_up4 = UpX(64, 64)
@@ -806,7 +804,7 @@ class Cerberus4(nn.Module):
         self.v_re11 = ResidualX(BasicBlock, 64, 32, depth)
         self.w_re11 = ResidualX(BasicBlock, 64, 32, depth)
 
-        self.fme11 = BetterFeatureMapExchange(32, 32)
+        self.fme11 = FeatureMapExchange(32, 32)
 
         self.u_up5 = UpX(32, 32)
         self.v_up5 = UpX(32, 32)
@@ -815,7 +813,7 @@ class Cerberus4(nn.Module):
         self.v_re12 = ResidualX(BasicBlock, 32, 16, depth)
         self.w_re12 = ResidualX(BasicBlock, 32, 16, depth)
 
-        self.fme12 = BetterFeatureMapExchange(16, 16)
+        self.fme12 = FeatureMapExchange(16, 16)
 
         self.u_output = OutConv(16, n_classes)
         self.v_output = OutConv(16, n_classes)
@@ -963,7 +961,7 @@ class Cerberus5(nn.Module):
         self.u_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
         self.v_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
         self.w_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
-        self.fme0 = BetterFeatureMapExchange(16, 16)
+        self.fme0 = FeatureMapExchange(16, 16)
         self.u_do0 = DownX()
         self.v_do0 = DownX()
         self.w_do0 = DownX()
@@ -972,7 +970,7 @@ class Cerberus5(nn.Module):
         self.u_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.v_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.w_re1 = ResidualX(BasicBlock, 16, 32, depth)
-        self.fme1 = BetterFeatureMapExchange(32, 32)
+        self.fme1 = FeatureMapExchange(32, 32)
         self.u_do1 = DownX()
         self.v_do1 = DownX()
         self.w_do1 = DownX()
@@ -981,7 +979,7 @@ class Cerberus5(nn.Module):
         self.u_re2 = ResidualX(BasicBlock, 32, 64, depth)
         self.v_re2 = ResidualX(BasicBlock, 32, 64, depth)
         self.w_re2 = ResidualX(BasicBlock, 32, 64, depth)
-        self.fme2 = BetterFeatureMapExchange(64, 64)
+        self.fme2 = FeatureMapExchange(64, 64)
         self.u_do2 = DownX()
         self.v_do2 = DownX()
         self.w_do2 = DownX()
@@ -1047,7 +1045,7 @@ class Cerberus5(nn.Module):
         self.v_re10 = ResidualX(BasicBlock, 128, 64, depth)
         self.w_re10 = ResidualX(BasicBlock, 128, 64, depth)
 
-        self.fme10 = BetterFeatureMapExchange(64, 64)
+        self.fme10 = FeatureMapExchange(64, 64)
 
         self.u_up4 = UpX(64, 64)
         self.v_up4 = UpX(64, 64)
@@ -1056,7 +1054,7 @@ class Cerberus5(nn.Module):
         self.v_re11 = ResidualX(BasicBlock, 64, 32, depth)
         self.w_re11 = ResidualX(BasicBlock, 64, 32, depth)
 
-        self.fme11 = BetterFeatureMapExchange(32, 32)
+        self.fme11 = FeatureMapExchange(32, 32)
 
         self.u_up5 = UpX(32, 32)
         self.v_up5 = UpX(32, 32)
@@ -1065,7 +1063,7 @@ class Cerberus5(nn.Module):
         self.v_re12 = ResidualX(BasicBlock, 32, 16, depth)
         self.w_re12 = ResidualX(BasicBlock, 32, 16, depth)
 
-        self.fme12 = BetterFeatureMapExchange(16, 16)
+        self.fme12 = FeatureMapExchange(16, 16)
 
         self.u_output = OutConv(16, n_classes)
         self.v_output = OutConv(16, n_classes)
@@ -1214,7 +1212,7 @@ class Cerberus6(nn.Module):
         self.u_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
         self.v_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
         self.w_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
-        self.fme0 = BetterFeatureMapExchange(16, 16)
+        self.fme0 = FeatureMapExchange(16, 16)
         self.u_do0 = DownX()
         self.v_do0 = DownX()
         self.w_do0 = DownX()
@@ -1223,7 +1221,7 @@ class Cerberus6(nn.Module):
         self.u_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.v_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.w_re1 = ResidualX(BasicBlock, 16, 32, depth)
-        self.fme1 = BetterFeatureMapExchange(32, 32)
+        self.fme1 = FeatureMapExchange(32, 32)
         self.u_do1 = DownX()
         self.v_do1 = DownX()
         self.w_do1 = DownX()
@@ -1232,7 +1230,7 @@ class Cerberus6(nn.Module):
         self.u_re2 = ResidualX(BasicBlock, 32, 64, depth)
         self.v_re2 = ResidualX(BasicBlock, 32, 64, depth)
         self.w_re2 = ResidualX(BasicBlock, 32, 64, depth)
-        self.fme2 = BetterFeatureMapExchange(64, 64)
+        self.fme2 = FeatureMapExchange(64, 64)
         self.u_do2 = DownX()
         self.v_do2 = DownX()
         self.w_do2 = DownX()
@@ -1298,7 +1296,7 @@ class Cerberus6(nn.Module):
         self.v_re10 = ResidualX(BasicBlock, 128, 64, depth)
         self.w_re10 = ResidualX(BasicBlock, 128, 64, depth)
 
-        self.fme10 = BetterFeatureMapExchange(64, 64)
+        self.fme10 = FeatureMapExchange(64, 64)
 
         self.u_up4 = UpX(64, 64)
         self.v_up4 = UpX(64, 64)
@@ -1307,7 +1305,7 @@ class Cerberus6(nn.Module):
         self.v_re11 = ResidualX(BasicBlock, 64, 32, depth)
         self.w_re11 = ResidualX(BasicBlock, 64, 32, depth)
 
-        self.fme11 = BetterFeatureMapExchange(32, 32)
+        self.fme11 = FeatureMapExchange(32, 32)
 
         self.u_up5 = UpX(32, 32)
         self.v_up5 = UpX(32, 32)
@@ -1316,7 +1314,7 @@ class Cerberus6(nn.Module):
         self.v_re12 = ResidualX(BasicBlock, 32, 16, depth)
         self.w_re12 = ResidualX(BasicBlock, 32, 16, depth)
 
-        self.fme12 = BetterFeatureMapExchange(16, 16)
+        self.fme12 = FeatureMapExchange(16, 16)
 
         self.u_output = OutConv(16, n_classes)
         self.v_output = OutConv(16, n_classes)
@@ -1467,7 +1465,7 @@ class Cerberus2U(nn.Module):
         self.v_do0 = DownX()
         self.w_do0 = DownX()
 
-        self.fme0 = BetterFeatureMapExchange(16, 16)
+        self.fme0 = FeatureMapExchange(16, 16)
 
         self.u_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.v_re1 = ResidualX(BasicBlock, 16, 32, depth)
@@ -1508,7 +1506,7 @@ class Cerberus2U(nn.Module):
         self.v_re6 = ResidualX(BasicBlock, 512, 1024, depth)
         self.w_re6 = ResidualX(BasicBlock, 512, 1024, depth)
 
-        self.fme1 = BetterFeatureMapExchange(1024, 1024)
+        self.fme1 = FeatureMapExchange(1024, 1024)
 
         self.u_up0 = UpX(1024, 1024)
         self.v_up0 = UpX(1024, 1024)
@@ -1545,7 +1543,7 @@ class Cerberus2U(nn.Module):
         self.v_re11 = ResidualX(BasicBlock, 64, 32, depth)
         self.w_re11 = ResidualX(BasicBlock, 64, 32, depth)
 
-        self.fme2 = BetterFeatureMapExchange(32, 32)
+        self.fme2 = FeatureMapExchange(32, 32)
 
         self.u_up5 = UpX(32, 32)
         self.v_up5 = UpX(32, 32)
@@ -1554,7 +1552,7 @@ class Cerberus2U(nn.Module):
         self.v_re12 = ResidualX(BasicBlock, 32, 16, depth)
         self.w_re12 = ResidualX(BasicBlock, 32, 16, depth)
 
-        self.fme3 = BetterFeatureMapExchange(16, 16)
+        self.fme3 = FeatureMapExchange(16, 16)
 
         self.u_output = OutConv(16, n_classes)
         self.v_output = OutConv(16, n_classes)
@@ -1694,7 +1692,7 @@ class Cerberus3F(nn.Module):
         self.u_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
         self.v_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
         self.w_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
-        self.fme0 = BetterFeatureMapExchange(16, 16)
+        self.fme0 = FeatureMapExchange(16, 16)
         self.u_do0 = DownX()
         self.v_do0 = DownX()
         self.w_do0 = DownX()
@@ -1703,7 +1701,7 @@ class Cerberus3F(nn.Module):
         self.u_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.v_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.w_re1 = ResidualX(BasicBlock, 16, 32, depth)
-        self.fme1 = BetterFeatureMapExchange(32, 32)
+        self.fme1 = FeatureMapExchange(32, 32)
         self.u_do1 = DownX()
         self.v_do1 = DownX()
         self.w_do1 = DownX()
@@ -1712,7 +1710,7 @@ class Cerberus3F(nn.Module):
         self.u_re2 = ResidualX(BasicBlock, 32, 64, depth)
         self.v_re2 = ResidualX(BasicBlock, 32, 64, depth)
         self.w_re2 = ResidualX(BasicBlock, 32, 64, depth)
-        self.fme2 = BetterFeatureMapExchange(64, 64)
+        self.fme2 = FeatureMapExchange(64, 64)
         self.u_do2 = DownX()
         self.v_do2 = DownX()
         self.w_do2 = DownX()
@@ -1721,7 +1719,7 @@ class Cerberus3F(nn.Module):
         self.u_re3 = ResidualX(BasicBlock, 64, 128, depth)
         self.v_re3 = ResidualX(BasicBlock, 64, 128, depth)
         self.w_re3 = ResidualX(BasicBlock, 64, 128, depth)
-        self.fme3 = BetterFeatureMapExchange(128, 128)
+        self.fme3 = FeatureMapExchange(128, 128)
         self.u_do3 = DownX()
         self.v_do3 = DownX()
         self.w_do3 = DownX()
@@ -1730,7 +1728,7 @@ class Cerberus3F(nn.Module):
         self.u_re4 = ResidualX(BasicBlock, 128, 256, depth)
         self.v_re4 = ResidualX(BasicBlock, 128, 256, depth)
         self.w_re4 = ResidualX(BasicBlock, 128, 256, depth)
-        self.fme4 = BetterFeatureMapExchange(256, 256)
+        self.fme4 = FeatureMapExchange(256, 256)
         self.u_do4 = DownX()
         self.v_do4 = DownX()
         self.w_do4 = DownX()
@@ -1739,7 +1737,7 @@ class Cerberus3F(nn.Module):
         self.u_re5 = ResidualX(BasicBlock, 256, 512, depth)
         self.v_re5 = ResidualX(BasicBlock, 256, 512, depth)
         self.w_re5 = ResidualX(BasicBlock, 256, 512, depth)
-        self.fme5 = BetterFeatureMapExchange(512, 512)
+        self.fme5 = FeatureMapExchange(512, 512)
         self.u_do5 = DownX()
         self.v_do5 = DownX()
         self.w_do5 = DownX()
@@ -1749,12 +1747,12 @@ class Cerberus3F(nn.Module):
         self.v_re6 = ResidualX(BasicBlock, 512, 1024, depth)
         self.w_re6 = ResidualX(BasicBlock, 512, 1024, depth)
 
-        self.fme6 = BetterFeatureMapExchange(1024, 1024)
+        self.fme6 = FeatureMapExchange(1024, 1024)
 
         self.u_up0 = UpX(1024, 1024)
         self.v_up0 = UpX(1024, 1024)
         self.w_up0 = UpX(1024, 1024)
-        self.fme7 = BetterFeatureMapExchange(1024, 1024)
+        self.fme7 = FeatureMapExchange(1024, 1024)
         self.u_re7 = ResidualX(BasicBlock, 1024, 512, depth)
         self.v_re7 = ResidualX(BasicBlock, 1024, 512, depth)
         self.w_re7 = ResidualX(BasicBlock, 1024, 512, depth)
@@ -1763,7 +1761,7 @@ class Cerberus3F(nn.Module):
         self.u_up1 = UpX(512, 512)
         self.v_up1 = UpX(512, 512)
         self.w_up1 = UpX(512, 512)
-        self.fme8 = BetterFeatureMapExchange(512, 512)
+        self.fme8 = FeatureMapExchange(512, 512)
         self.u_re8 = ResidualX(BasicBlock, 512, 256, depth)
         self.v_re8 = ResidualX(BasicBlock, 512, 256, depth)
         self.w_re8 = ResidualX(BasicBlock, 512, 256, depth)
@@ -1772,7 +1770,7 @@ class Cerberus3F(nn.Module):
         self.u_up2 = UpX(256, 256)
         self.v_up2 = UpX(256, 256)
         self.w_up2 = UpX(256, 256)
-        self.fme9 = BetterFeatureMapExchange(256, 256)
+        self.fme9 = FeatureMapExchange(256, 256)
         self.u_re9 = ResidualX(BasicBlock, 256, 128, depth)
         self.v_re9 = ResidualX(BasicBlock, 256, 128, depth)
         self.w_re9 = ResidualX(BasicBlock, 256, 128, depth)
@@ -1781,7 +1779,7 @@ class Cerberus3F(nn.Module):
         self.u_up3 = UpX(128, 128)
         self.v_up3 = UpX(128, 128)
         self.w_up3 = UpX(128, 128)
-        self.fme10 = BetterFeatureMapExchange(128, 128)
+        self.fme10 = FeatureMapExchange(128, 128)
         self.u_re10 = ResidualX(BasicBlock, 128, 64, depth)
         self.v_re10 = ResidualX(BasicBlock, 128, 64, depth)
         self.w_re10 = ResidualX(BasicBlock, 128, 64, depth)
@@ -1790,7 +1788,7 @@ class Cerberus3F(nn.Module):
         self.u_up4 = UpX(64, 64)
         self.v_up4 = UpX(64, 64)
         self.w_up4 = UpX(64, 64)
-        self.fme11 = BetterFeatureMapExchange(64, 64)
+        self.fme11 = FeatureMapExchange(64, 64)
         self.u_re11 = ResidualX(BasicBlock, 64, 32, depth)
         self.v_re11 = ResidualX(BasicBlock, 64, 32, depth)
         self.w_re11 = ResidualX(BasicBlock, 64, 32, depth)
@@ -1799,7 +1797,7 @@ class Cerberus3F(nn.Module):
         self.u_up5 = UpX(32, 32)
         self.v_up5 = UpX(32, 32)
         self.w_up5 = UpX(32, 32)
-        self.fme12 = BetterFeatureMapExchange(32, 32)
+        self.fme12 = FeatureMapExchange(32, 32)
         self.u_re12 = ResidualX(BasicBlock, 32, 16, depth)
         self.v_re12 = ResidualX(BasicBlock, 32, 16, depth)
         self.w_re12 = ResidualX(BasicBlock, 32, 16, depth)
@@ -1959,7 +1957,7 @@ class Cerberus3F2(nn.Module):
         self.u_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
         self.v_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
         self.w_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
-        self.fme0 = BetterFeatureMapExchange(16, 16)
+        self.fme0 = FeatureMapExchange(16, 16)
         self.u_do0 = DownX()
         self.v_do0 = DownX()
         self.w_do0 = DownX()
@@ -1968,7 +1966,7 @@ class Cerberus3F2(nn.Module):
         self.u_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.v_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.w_re1 = ResidualX(BasicBlock, 16, 32, depth)
-        self.fme1 = BetterFeatureMapExchange(32, 32)
+        self.fme1 = FeatureMapExchange(32, 32)
         self.u_do1 = DownX()
         self.v_do1 = DownX()
         self.w_do1 = DownX()
@@ -1977,7 +1975,7 @@ class Cerberus3F2(nn.Module):
         self.u_re2 = ResidualX(BasicBlock, 32, 64, depth)
         self.v_re2 = ResidualX(BasicBlock, 32, 64, depth)
         self.w_re2 = ResidualX(BasicBlock, 32, 64, depth)
-        self.fme2 = BetterFeatureMapExchange(64, 64)
+        self.fme2 = FeatureMapExchange(64, 64)
         self.u_do2 = DownX()
         self.v_do2 = DownX()
         self.w_do2 = DownX()
@@ -1986,7 +1984,7 @@ class Cerberus3F2(nn.Module):
         self.u_re3 = ResidualX(BasicBlock, 64, 128, depth)
         self.v_re3 = ResidualX(BasicBlock, 64, 128, depth)
         self.w_re3 = ResidualX(BasicBlock, 64, 128, depth)
-        self.fme3 = BetterFeatureMapExchange(128, 128)
+        self.fme3 = FeatureMapExchange(128, 128)
         self.u_do3 = DownX()
         self.v_do3 = DownX()
         self.w_do3 = DownX()
@@ -1995,7 +1993,7 @@ class Cerberus3F2(nn.Module):
         self.u_re4 = ResidualX(BasicBlock, 128, 256, depth)
         self.v_re4 = ResidualX(BasicBlock, 128, 256, depth)
         self.w_re4 = ResidualX(BasicBlock, 128, 256, depth)
-        self.fme4 = BetterFeatureMapExchange(256, 256)
+        self.fme4 = FeatureMapExchange(256, 256)
         self.u_do4 = DownX()
         self.v_do4 = DownX()
         self.w_do4 = DownX()
@@ -2004,7 +2002,7 @@ class Cerberus3F2(nn.Module):
         self.u_re5 = ResidualX(BasicBlock, 256, 512, depth)
         self.v_re5 = ResidualX(BasicBlock, 256, 512, depth)
         self.w_re5 = ResidualX(BasicBlock, 256, 512, depth)
-        self.fme5 = BetterFeatureMapExchange(512, 512)
+        self.fme5 = FeatureMapExchange(512, 512)
         self.u_do5 = DownX()
         self.v_do5 = DownX()
         self.w_do5 = DownX()
@@ -2013,13 +2011,13 @@ class Cerberus3F2(nn.Module):
         self.u_re6 = ResidualX(BasicBlock, 512, 1024, depth)
         self.v_re6 = ResidualX(BasicBlock, 512, 1024, depth)
         self.w_re6 = ResidualX(BasicBlock, 512, 1024, depth)
-        self.fme6 = BetterFeatureMapExchange(1024, 1024)
+        self.fme6 = FeatureMapExchange(1024, 1024)
         
 
         self.u_up0 = UpX(1024, 1024)
         self.v_up0 = UpX(1024, 1024)
         self.w_up0 = UpX(1024, 1024)
-        self.fme7 = BetterFeatureMapExchange(1024, 1024)
+        self.fme7 = FeatureMapExchange(1024, 1024)
         self.u_re7 = ResidualX(BasicBlock, 1024, 512, depth)
         self.v_re7 = ResidualX(BasicBlock, 1024, 512, depth)
         self.w_re7 = ResidualX(BasicBlock, 1024, 512, depth)
@@ -2028,7 +2026,7 @@ class Cerberus3F2(nn.Module):
         self.u_up1 = UpX(512, 512)
         self.v_up1 = UpX(512, 512)
         self.w_up1 = UpX(512, 512)
-        self.fme8 = BetterFeatureMapExchange(512, 512)
+        self.fme8 = FeatureMapExchange(512, 512)
         self.u_re8 = ResidualX(BasicBlock, 512, 256, depth)
         self.v_re8 = ResidualX(BasicBlock, 512, 256, depth)
         self.w_re8 = ResidualX(BasicBlock, 512, 256, depth)
@@ -2037,7 +2035,7 @@ class Cerberus3F2(nn.Module):
         self.u_up2 = UpX(256, 256)
         self.v_up2 = UpX(256, 256)
         self.w_up2 = UpX(256, 256)
-        self.fme9 = BetterFeatureMapExchange(256, 256)
+        self.fme9 = FeatureMapExchange(256, 256)
         self.u_re9 = ResidualX(BasicBlock, 256, 128, depth)
         self.v_re9 = ResidualX(BasicBlock, 256, 128, depth)
         self.w_re9 = ResidualX(BasicBlock, 256, 128, depth)
@@ -2046,7 +2044,7 @@ class Cerberus3F2(nn.Module):
         self.u_up3 = UpX(128, 128)
         self.v_up3 = UpX(128, 128)
         self.w_up3 = UpX(128, 128)
-        self.fme10 = BetterFeatureMapExchange(128, 128)
+        self.fme10 = FeatureMapExchange(128, 128)
         self.u_re10 = ResidualX(BasicBlock, 128, 64, depth)
         self.v_re10 = ResidualX(BasicBlock, 128, 64, depth)
         self.w_re10 = ResidualX(BasicBlock, 128, 64, depth)
@@ -2055,7 +2053,7 @@ class Cerberus3F2(nn.Module):
         self.u_up4 = UpX(64, 64)
         self.v_up4 = UpX(64, 64)
         self.w_up4 = UpX(64, 64)
-        self.fme11 = BetterFeatureMapExchange(64, 64)
+        self.fme11 = FeatureMapExchange(64, 64)
         self.u_re11 = ResidualX(BasicBlock, 64, 32, depth)
         self.v_re11 = ResidualX(BasicBlock, 64, 32, depth)
         self.w_re11 = ResidualX(BasicBlock, 64, 32, depth)
@@ -2064,7 +2062,7 @@ class Cerberus3F2(nn.Module):
         self.u_up5 = UpX(32, 32)
         self.v_up5 = UpX(32, 32)
         self.w_up5 = UpX(32, 32)
-        self.fme12 = BetterFeatureMapExchange(32, 32)
+        self.fme12 = FeatureMapExchange(32, 32)
         self.u_re12 = ResidualX(BasicBlock, 32, 16, depth)
         self.v_re12 = ResidualX(BasicBlock, 32, 16, depth)
         self.w_re12 = ResidualX(BasicBlock, 32, 16, depth)
@@ -2225,7 +2223,7 @@ class Cerberus3F2U(nn.Module):
         self.u_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
         self.v_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
         self.w_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
-        self.fme0 = BetterFeatureMapExchange(16, 16)
+        self.fme0 = FeatureMapExchange(16, 16)
         self.u_do0 = DownX()
         self.v_do0 = DownX()
         self.w_do0 = DownX()
@@ -2234,7 +2232,7 @@ class Cerberus3F2U(nn.Module):
         self.u_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.v_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.w_re1 = ResidualX(BasicBlock, 16, 32, depth)
-        self.fme1 = BetterFeatureMapExchange(32, 32)
+        self.fme1 = FeatureMapExchange(32, 32)
         self.u_do1 = DownX()
         self.v_do1 = DownX()
         self.w_do1 = DownX()
@@ -2243,7 +2241,7 @@ class Cerberus3F2U(nn.Module):
         self.u_re2 = ResidualX(BasicBlock, 32, 64, depth)
         self.v_re2 = ResidualX(BasicBlock, 32, 64, depth)
         self.w_re2 = ResidualX(BasicBlock, 32, 64, depth)
-        self.fme2 = BetterFeatureMapExchange(64, 64)
+        self.fme2 = FeatureMapExchange(64, 64)
         self.u_do2 = DownX()
         self.v_do2 = DownX()
         self.w_do2 = DownX()
@@ -2252,7 +2250,7 @@ class Cerberus3F2U(nn.Module):
         self.u_re3 = ResidualX(BasicBlock, 64, 128, depth)
         self.v_re3 = ResidualX(BasicBlock, 64, 128, depth)
         self.w_re3 = ResidualX(BasicBlock, 64, 128, depth)
-        self.fme3 = BetterFeatureMapExchange(128, 128)
+        self.fme3 = FeatureMapExchange(128, 128)
         self.u_do3 = DownX()
         self.v_do3 = DownX()
         self.w_do3 = DownX()
@@ -2261,7 +2259,7 @@ class Cerberus3F2U(nn.Module):
         self.u_re4 = ResidualX(BasicBlock, 128, 256, depth)
         self.v_re4 = ResidualX(BasicBlock, 128, 256, depth)
         self.w_re4 = ResidualX(BasicBlock, 128, 256, depth)
-        self.fme4 = BetterFeatureMapExchange(256, 256)
+        self.fme4 = FeatureMapExchange(256, 256)
         self.u_do4 = DownX()
         self.v_do4 = DownX()
         self.w_do4 = DownX()
@@ -2270,7 +2268,7 @@ class Cerberus3F2U(nn.Module):
         self.u_re5 = ResidualX(BasicBlock, 256, 512, depth)
         self.v_re5 = ResidualX(BasicBlock, 256, 512, depth)
         self.w_re5 = ResidualX(BasicBlock, 256, 512, depth)
-        self.fme5 = BetterFeatureMapExchange(512, 512)
+        self.fme5 = FeatureMapExchange(512, 512)
         self.u_do5 = DownX()
         self.v_do5 = DownX()
         self.w_do5 = DownX()
@@ -2279,13 +2277,13 @@ class Cerberus3F2U(nn.Module):
         self.u_re6 = ResidualX(BasicBlock, 512, 1024, depth)
         self.v_re6 = ResidualX(BasicBlock, 512, 1024, depth)
         self.w_re6 = ResidualX(BasicBlock, 512, 1024, depth)
-        self.fme6 = BetterFeatureMapExchange(1024, 1024)
+        self.fme6 = FeatureMapExchange(1024, 1024)
         
 
         self.u_up0 = UpX(1024, 1024)
         self.v_up0 = UpX(1024, 1024)
         self.w_up0 = UpX(1024, 1024)
-        self.fme7 = BetterFeatureMapExchange(1024, 1024)
+        self.fme7 = FeatureMapExchange(1024, 1024)
         self.u_re7 = ResidualX(BasicBlock, 1024, 512, depth)
         self.v_re7 = ResidualX(BasicBlock, 1024, 512, depth)
         self.w_re7 = ResidualX(BasicBlock, 1024, 512, depth)
@@ -2294,7 +2292,7 @@ class Cerberus3F2U(nn.Module):
         self.u_up1 = UpX(512, 512)
         self.v_up1 = UpX(512, 512)
         self.w_up1 = UpX(512, 512)
-        self.fme8 = BetterFeatureMapExchange(512, 512)
+        self.fme8 = FeatureMapExchange(512, 512)
         self.u_re8 = ResidualX(BasicBlock, 512, 256, depth)
         self.v_re8 = ResidualX(BasicBlock, 512, 256, depth)
         self.w_re8 = ResidualX(BasicBlock, 512, 256, depth)
@@ -2303,7 +2301,7 @@ class Cerberus3F2U(nn.Module):
         self.u_up2 = UpX(256, 256)
         self.v_up2 = UpX(256, 256)
         self.w_up2 = UpX(256, 256)
-        self.fme9 = BetterFeatureMapExchange(256, 256)
+        self.fme9 = FeatureMapExchange(256, 256)
         self.u_re9 = ResidualX(BasicBlock, 256, 128, depth)
         self.v_re9 = ResidualX(BasicBlock, 256, 128, depth)
         self.w_re9 = ResidualX(BasicBlock, 256, 128, depth)
@@ -2312,7 +2310,7 @@ class Cerberus3F2U(nn.Module):
         self.u_up3 = UpX(128, 128)
         self.v_up3 = UpX(128, 128)
         self.w_up3 = UpX(128, 128)
-        self.fme10 = BetterFeatureMapExchange(128, 128)
+        self.fme10 = FeatureMapExchange(128, 128)
         self.u_re10 = ResidualX(BasicBlock, 128, 64, depth)
         self.v_re10 = ResidualX(BasicBlock, 128, 64, depth)
         self.w_re10 = ResidualX(BasicBlock, 128, 64, depth)
@@ -2321,7 +2319,7 @@ class Cerberus3F2U(nn.Module):
         self.u_up4 = UpX(64, 64)
         self.v_up4 = UpX(64, 64)
         self.w_up4 = UpX(64, 64)
-        self.fme11 = BetterFeatureMapExchange(64, 64)
+        self.fme11 = FeatureMapExchange(64, 64)
         self.u_re11 = ResidualX(BasicBlock, 64, 32, depth)
         self.v_re11 = ResidualX(BasicBlock, 64, 32, depth)
         self.w_re11 = ResidualX(BasicBlock, 64, 32, depth)
@@ -2330,7 +2328,7 @@ class Cerberus3F2U(nn.Module):
         self.u_up5 = UpX(32, 32)
         self.v_up5 = UpX(32, 32)
         self.w_up5 = UpX(32, 32)
-        self.fme12 = BetterFeatureMapExchange(32, 32)
+        self.fme12 = FeatureMapExchange(32, 32)
         self.u_re12 = ResidualX(BasicBlock, 32, 16, depth)
         self.v_re12 = ResidualX(BasicBlock, 32, 16, depth)
         self.w_re12 = ResidualX(BasicBlock, 32, 16, depth)
@@ -2490,7 +2488,7 @@ class Cerberus3F3(nn.Module):
         self.u_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
         self.v_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
         self.w_re0 = ResidualX(BasicBlock, n_channels, 16, depth)
-        self.fme0 = BetterFeatureMapExchange(16, 16)
+        self.fme0 = FeatureMapExchange(16, 16)
         self.u_do0 = DownX()
         self.v_do0 = DownX()
         self.w_do0 = DownX()
@@ -2499,7 +2497,7 @@ class Cerberus3F3(nn.Module):
         self.u_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.v_re1 = ResidualX(BasicBlock, 16, 32, depth)
         self.w_re1 = ResidualX(BasicBlock, 16, 32, depth)
-        self.fme1 = BetterFeatureMapExchange(32, 32)
+        self.fme1 = FeatureMapExchange(32, 32)
         self.u_do1 = DownX()
         self.v_do1 = DownX()
         self.w_do1 = DownX()
@@ -2508,7 +2506,7 @@ class Cerberus3F3(nn.Module):
         self.u_re2 = ResidualX(BasicBlock, 32, 64, depth)
         self.v_re2 = ResidualX(BasicBlock, 32, 64, depth)
         self.w_re2 = ResidualX(BasicBlock, 32, 64, depth)
-        self.fme2 = BetterFeatureMapExchange(64, 64)
+        self.fme2 = FeatureMapExchange(64, 64)
         self.u_do2 = DownX()
         self.v_do2 = DownX()
         self.w_do2 = DownX()
@@ -2570,7 +2568,7 @@ class Cerberus3F3(nn.Module):
         self.u_up3 = UpX(128, 128)
         self.v_up3 = UpX(128, 128)
         self.w_up3 = UpX(128, 128)
-        self.fme10 = BetterFeatureMapExchange(128, 128)
+        self.fme10 = FeatureMapExchange(128, 128)
         self.u_re10 = ResidualX(BasicBlock, 128, 64, depth)
         self.v_re10 = ResidualX(BasicBlock, 128, 64, depth)
         self.w_re10 = ResidualX(BasicBlock, 128, 64, depth)
@@ -2579,7 +2577,7 @@ class Cerberus3F3(nn.Module):
         self.u_up4 = UpX(64, 64)
         self.v_up4 = UpX(64, 64)
         self.w_up4 = UpX(64, 64)
-        self.fme11 = BetterFeatureMapExchange(64, 64)
+        self.fme11 = FeatureMapExchange(64, 64)
         self.u_re11 = ResidualX(BasicBlock, 64, 32, depth)
         self.v_re11 = ResidualX(BasicBlock, 64, 32, depth)
         self.w_re11 = ResidualX(BasicBlock, 64, 32, depth)
@@ -2588,7 +2586,7 @@ class Cerberus3F3(nn.Module):
         self.u_up5 = UpX(32, 32)
         self.v_up5 = UpX(32, 32)
         self.w_up5 = UpX(32, 32)
-        self.fme12 = BetterFeatureMapExchange(32, 32)
+        self.fme12 = FeatureMapExchange(32, 32)
         self.u_re12 = ResidualX(BasicBlock, 32, 16, depth)
         self.v_re12 = ResidualX(BasicBlock, 32, 16, depth)
         self.w_re12 = ResidualX(BasicBlock, 32, 16, depth)
